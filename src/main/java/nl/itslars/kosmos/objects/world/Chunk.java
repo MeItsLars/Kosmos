@@ -1,0 +1,181 @@
+package nl.itslars.kosmos.objects.world;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import nl.itslars.kosmos.enums.BlockType;
+import nl.itslars.kosmos.enums.Dimension;
+import nl.itslars.kosmos.objects.entity.Entity;
+import nl.itslars.kosmos.objects.entity.TileEntity;
+import nl.itslars.kosmos.util.Chunks;
+
+import java.util.*;
+
+/**
+ * Class for representing a Chunk. Note the difference between this class and a {@link SubChunk}.
+ * This class represents a 16x16x256 area in a certain dimension. This area is divided into {@link SubChunk}
+ * objects, that are stored inside of this class. The class contains chunk information like elevation, biomes
+ * entities, tile entities, and of course all blocks.
+ */
+@Getter
+@RequiredArgsConstructor
+public class Chunk {
+
+    // The parent WorldData class that this Chunk is stored in.
+    private final WorldData world;
+    // The X coordinate of the chunk
+    private final int chunkX;
+    // The Z coordinate of the chunk
+    private final int chunkZ;
+    // The chunk dimension
+    private final Dimension dimension;
+
+    // The 2d elevation map, that contains the maximum height of each x/z combination, plus 1.
+    // TODO: When a chunk has been changed, the elevation should be updated. This is not currently done yet.
+    private final short[][] elevation = new short[16][16];
+    // The 2d biome map, that contains the biome for each x/z combination, represented as a number.
+    private final byte[][] biomes = new byte[16][16];
+
+    // The set of entities inside this chunk
+    private final Set<Entity> entities = new HashSet<>();
+    // The set of tile entities inside this chunk
+    private final Set<TileEntity> tileEntities = new HashSet<>();
+
+    // The SubChunk map. Each chunk height is mapped to the corresponding SubChunk.
+    private final Map<Short, SubChunk> subChunks = new HashMap<>();
+
+    /**
+     * Retrieves the block that is at the given in-chunk coordinates. If the block didn't exist (because there was
+     * no {@link SubChunk} there), an empty {@link Optional} is returned.
+     * @param translatedX The translated X coordinate (the 'local' x coordinate, ranging from 0-15) of the block
+     * @param y The y coordinate of the block
+     * @param translatedZ The translated Z coordinate (the 'local' z coordinate, ranging from 0-15) of the block
+     * @return An {@link Optional} containing the block if present, empty otherwise.
+     */
+    public Optional<Block> getBlock(int translatedX, int y, int translatedZ) {
+        // Get the SubChunk Y
+        short chunkY = (short) (y >> 4);
+        // If the SubChunk is not present, return an empty optional
+        if (!subChunks.containsKey(chunkY)) {
+            return Optional.empty();
+        }
+        // Return the block that is at the given coordinates
+        return Optional.ofNullable(subChunks.get(chunkY).getBlocks()[translatedX][y - (16 * chunkY)][translatedZ]);
+    }
+
+    /**
+     * Sets a block at the given in-chunk coordinates. If the block was successfully created, the block is returned.
+     * If the block could not be created, an empty {@link Optional} is returned.
+     * @param translatedX The translated X coordinate (the 'local' x coordinate, ranging from 0-15) of the block
+     * @param y The y coordinate of the block
+     * @param translatedZ The translated Z coordinate (the 'local' z coordinate, ranging from 0-15) of the block
+     * @param blockType The block type to place
+     * @return An {@link Optional} containing the resulting block if present, empty otherwise.
+     */
+    public Optional<Block> setBlock(int translatedX, int y, int translatedZ, BlockType blockType) {
+        return setBlock(translatedX, y, translatedZ, blockType.name());
+    }
+
+    /**
+     * Sets a block at the given in-chunk coordinates. If the block was successfully created, the block is returned.
+     * If the block could not be created, an empty {@link Optional} is returned.
+     * @param translatedX The translated X coordinate (the 'local' x coordinate, ranging from 0-15) of the block
+     * @param y The y coordinate of the block
+     * @param translatedZ The translated Z coordinate (the 'local' z coordinate, ranging from 0-15) of the block
+     * @param name The name of the block type to place
+     * @return An {@link Optional} containing the resulting block if present, empty otherwise.
+     */
+    public Optional<Block> setBlock(int translatedX, int y, int translatedZ, String name) {
+        // Get the SubChunk Y
+        short chunkY = (short) (y >> 4);
+        // Make sure all chunks up to and including chunkY are created
+        ensureChunkSpace(chunkY);
+        // Retrieve the SubChunk
+        SubChunk subChunk = subChunks.get(chunkY);
+        // If the SubChunk was not null, create, set, and return the block
+        if (subChunk != null) {
+            Block result = new Block(name);
+            subChunk.getBlocks()[translatedX][y - (16 * chunkY)][translatedZ] = result;
+            return Optional.of(result);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Make sure all chunks up to and including the desired chunk height are created.
+     * The desired chunk height may be at most 15, because the world height limit is at 256 blocks.
+     * @param desiredChunkHeight The desired chunk height
+     */
+    private void ensureChunkSpace(int desiredChunkHeight) {
+        // Loop through all chunk heights. If the SubChunk did not yet exist, create a new SubChunk
+        for (short currentY = 0; currentY <= Math.min(desiredChunkHeight, 15); currentY++) {
+            if (!subChunks.containsKey(currentY)) {
+                subChunks.put(currentY, createNewSubChunk(currentY));
+            }
+        }
+    }
+
+    /**
+     * Creates and initializes a new {@link SubChunk} for the current chunk
+     * @param chunkY The height of the {@link SubChunk}
+     * @return The newly create {@link SubChunk}
+     */
+    private SubChunk createNewSubChunk(short chunkY) {
+        // Create and fill a new blocks array with air
+        Block[][][] blocks = new Block[16][16][16];
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 16; y++) {
+                for (int z = 0; z < 16; z++) {
+                    blocks[x][y][z] = new Block(BlockType.AIR);
+                }
+            }
+        }
+        return new SubChunk(this, chunkY, blocks);
+    }
+
+    /**
+     * Retrieves the X coordinate of this chunk
+     * @return The X coordinate
+     */
+    public int getX() {
+        return chunkX;
+    }
+
+
+    /**
+     * Retrieves the Z coordinate of this chunk
+     * @return The Z coordinate
+     */
+    public int getZ() {
+        return chunkZ;
+    }
+
+    /**
+     * Saves the chunk to the Minecraft Bedrock LevelDB storage
+     */
+    public void save() {
+        Chunks.saveChunk(world.getWorld().getDb(), this);
+    }
+
+    /**
+     * Unloads the current chunk from the cached chunk map in the {@link WorldData} chunk storage
+     */
+    public void unload() {
+        unload(false);
+    }
+
+    /**
+     * Unloads the current chunk from the cached chunk map in the {@link WorldData} chunk storage
+     * @param save Whether the chunk should be saved before it is unloaded
+     */
+    public void unload(boolean save) {
+        if (save) save();
+
+        // Retrieve the (sub)map containing this chunk, and remove this chunk from that map
+        Map<Integer, Chunk> zs = world.getCachedChunks().get(dimension).get(chunkX);
+        zs.remove(chunkZ);
+        // If the new map is empty, remove it entirely from the chunk map
+        if (zs.size() == 0) {
+            world.getCachedChunks().get(dimension).remove(chunkX);
+        }
+    }
+}
