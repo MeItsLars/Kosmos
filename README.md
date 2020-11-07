@@ -90,3 +90,6 @@ world.fill(x1, y1, z1, x2, y2, z2, block);
 world.replace(x1, y1, z1, x2, y2, z2, source, target);
 ```
 For more info on all these methods, please read the method documentation in the WorldData class.
+
+## Performance
+The performance of this library in general is decent. It's not highly optimized, but it does the job. The only time performance might become an issue, is when filling/replacing a lot of blocks. These methods can probably be optimized quite a bit. If you manage to find a way to increase the speed, please create a Pull Request! :)
