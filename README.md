@@ -31,8 +31,8 @@ Kosmos was made in Java 8, and can be used using the following Maven dependency 
 </repositories>
 
 <dependency>
-	  <groupId>com.github.MeItsLars</groupId>
-	  <artifactId>Kosmos</artifactId>
+    <groupId>com.github.MeItsLars</groupId>
+    <artifactId>Kosmos</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```
