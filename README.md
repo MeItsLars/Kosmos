@@ -23,7 +23,18 @@ WARNING: Before using the Kosmos API on any world, I highly recommend you to BAC
 
 Kosmos was made in Java 8, and can be used using the following Maven dependency (via Jitpack):
 ```xml
-<TODO>TODO</TODO>
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependency>
+	  <groupId>com.github.MeItsLars</groupId>
+	  <artifactId>Kosmos</artifactId>
+    <version>1.0.0</version>
+</dependency>
 ```
 
 Using Kosmos is really easy, that's what it was made for. First, you need to open the world like this:
