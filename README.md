@@ -40,6 +40,8 @@ Kosmos was made in Java 8, and can be used using the following Maven dependency 
 </dependency>
 ```
 
+Kosmos has a full JavaDoc documentation: https://javadoc.jitpack.io/com/github/MeItsLars/Kosmos/latest/javadoc/index.html
+
 Using Kosmos is really easy, that's what it was made for. First, you need to open the world like this:
 ```java
 File file = new File("PATH/TO/YOUR/WORLD");
