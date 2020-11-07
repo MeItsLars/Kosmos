@@ -42,7 +42,15 @@
         <dependency>
             <groupId>com.github.MeItsLars</groupId>
             <artifactId>MCPE-NBT</artifactId>
-            <version>1.3</version>
+            <version>1.4</version>
+        </dependency>
+
+        <!-- JUnit 5 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

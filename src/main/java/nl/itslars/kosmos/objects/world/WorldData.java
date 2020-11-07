@@ -97,6 +97,7 @@ public class WorldData implements Closeable {
      */
     @Override
     public void close() throws IOException {
+        unloadChunks();
         world.close();
     }
 
@@ -222,7 +223,7 @@ public class WorldData implements Closeable {
      * @return An optional containing the block if it was successfully set, empty otherwise
      */
     public Optional<Block> setBlock(Dimension dimension, int x, int y, int z, BlockType blockType) {
-        return setBlock(dimension, x, y, z, blockType.name());
+        return setBlock(dimension, x, y, z, blockType.getNameSpacedId());
     }
 
     /**
