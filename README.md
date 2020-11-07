@@ -18,6 +18,9 @@ I'd highly appreciate it if you contributed it back! This way, Kosmos can grow i
 
 If you want to contribute, you can create a pull request. If you have questions, feel free to contact me on Discord (MeItsLars#0183). I probably won't respond to friend requests, but I'm in the Bedrock OSS, Discord Den, and Team Workbench public Discord, so you can message me via there!
 
+# Issues/Feature requests
+If you found a mistake in the code, or you want to request a new feature, you can either create a PR, create an Issue on GitHub, or message me on Discord!
+
 # Usage
 WARNING: Before using the Kosmos API on any world, I highly recommend you to BACKUP THE WORLD. I can NOT GUARANTEE that nothing will go wrong!
 
