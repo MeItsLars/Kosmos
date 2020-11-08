@@ -16,7 +16,7 @@ Kosmos accesses the LevelDB through a modified wrapper library, made by Dain and
 As mentioned, you're free to use this program. However, if you made something useful, or you changed the code to be better or faster, 
 I'd highly appreciate it if you contributed it back! This way, Kosmos can grow in functionality, and everyone can profit! That's the idea behind this project :)
 
-If you want to contribute, you can create a pull request. If you have questions, feel free to contact me on Discord (MeItsLars#0183). I probably won't respond to friend requests, but I'm in the [Bedrock OSS Discord](https://discord.gg/XjV87YN), Discord Den, and Team Workbench public Discord, so you can message me via there!
+If you want to contribute, you can create a pull request. If you have questions, feel free to contact me on Discord (MeItsLars#0183). I probably won't respond to friend requests, but I'm in the [Bedrock OSS Discord](https://discord.gg/XjV87YN), Discord Den, and [Team Workbench public Discord](https://discord.gg/fJvZuqj), so you can message me via there!
 
 # Issues/Feature requests
 If you found a mistake in the code, or you want to request a new feature, you can either create a PR, create an Issue on GitHub, or message me on Discord!
