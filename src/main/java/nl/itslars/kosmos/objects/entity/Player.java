@@ -28,12 +28,12 @@ public class Player extends LivingEntity {
         this.nbtKey = nbtKey;
     }
 
-    public <T> List<T> getAbilities() {
-        throw new NotYetImplementedException();
+    public CompoundTag getAbilities() {
+        return (CompoundTag) getNbtTag(PLAYER_NBT_ABILITIES);
     }
 
-    public <T> void setAbilities(List<T> abilities) {
-        throw new NotYetImplementedException();
+    public void setAbilities(CompoundTag abilities) {
+        getParentCompoundTag().change(PLAYER_NBT_ABILITIES, abilities);
     }
 
     // List of ItemStack???
@@ -94,7 +94,7 @@ public class Player extends LivingEntity {
     }
 
     public void setEnchantmentSeed(int enchantmentSeed) {
-        setEnchantmentSeed(enchantmentSeed);
+        setIntTag(PLAYER_NBT_ENCHANTMENT_SEED, enchantmentSeed);
     }
 
     public String getFormatVersion() {
