@@ -1,5 +1,6 @@
 package nl.itslars.kosmos;
 
+import nl.itslars.kosmos.enums.Ability;
 import nl.itslars.kosmos.enums.BlockType;
 import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.enums.GameRule;
@@ -99,6 +100,18 @@ class KosmosTest {
         reOpenTestWorld();
         Assertions.assertEquals(100, currentTestWorld.getLevelDatFile().getIntGameRule(GameRule.SPAWN_RADIUS));
         Assertions.assertEquals(100000, currentTestWorld.getLevelDatFile().getIntGameRule(GameRule.MAX_COMMAND_CHAIN_LENGTH));
+    }
+
+    @Test
+    void testLevelDatAbilities() {
+        currentTestWorld.getLevelDatFile().getAbilities().setAbility(Ability.BUILD, false);
+        currentTestWorld.getLevelDatFile().getAbilities().setAbility(Ability.FLY_SPEED, 0.3f);
+        currentTestWorld.getLevelDatFile().getAbilities().setAbility(Ability.PERMISSIONS_LEVEL, 3);
+        currentTestWorld.save();
+        reOpenTestWorld();
+        Assertions.assertFalse(currentTestWorld.getLevelDatFile().getAbilities().getBooleanAbility(Ability.BUILD));
+        Assertions.assertEquals(0.3f, currentTestWorld.getLevelDatFile().getAbilities().getFloatAbility(Ability.FLY_SPEED));
+        Assertions.assertEquals(3, currentTestWorld.getLevelDatFile().getAbilities().getIntAbility(Ability.PERMISSIONS_LEVEL));
     }
 
     @Test

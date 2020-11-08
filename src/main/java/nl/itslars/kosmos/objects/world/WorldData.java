@@ -5,7 +5,7 @@ import lombok.SneakyThrows;
 import nl.itslars.kosmos.World;
 import nl.itslars.kosmos.enums.BlockType;
 import nl.itslars.kosmos.enums.Dimension;
-import nl.itslars.kosmos.objects.LevelDatFile;
+import nl.itslars.kosmos.objects.settings.LevelDatFile;
 import nl.itslars.kosmos.objects.entity.Player;
 import nl.itslars.kosmos.util.Chunks;
 import nl.itslars.mcpenbt.NBTUtil;
