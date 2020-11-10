@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/MeItsLars/Kosmos.svg)](https://jitpack.io/#MeItsLars/Kosmos)
+
 # Kosmos
 Kosmos (named after the Greek word for 'world') is a Java API for accessing Minecraft Bedrock (MCPE) worlds.
 It can be used to automate world changes/exporting, or to do high-scale world changes that default Minecraft commands do not support.
