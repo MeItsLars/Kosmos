@@ -11,11 +11,17 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
+import org.iq80.leveldb.shaded.guava.io.Files;
+import org.iq80.leveldb.util.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.Charset;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +30,8 @@ import java.util.Map;
  */
 @Getter
 public class World {
+
+    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd-HH.mm.ss");
 
     // The LevelDB storage
     private final DB db;
@@ -106,14 +114,26 @@ public class World {
      * Opens a world from the given world directory. Note that this directory is not the location of the database,
      * but the location of the entire world
      * @param directory The world directory
+     * @param backupDirectory The directory that this world is backed up into, before opening it
      * @return A newly instantiated WorldData object
      * @throws IOException When opening the world failed
      */
-    public static WorldData open(File directory) throws IOException {
+    public static WorldData open(File directory, File backupDirectory) throws IOException {
         // Check if the directory was a proper world directory, based on the levelname.txt file
         File worldName = new File(directory, "levelname.txt");
         if (!worldName.exists()) {
             throw new IllegalArgumentException("Invalid world directory.");
+        }
+
+        // Backup world
+        if (backupDirectory != null) {
+            if (!backupDirectory.exists()) {
+                throw new IllegalArgumentException("The provided backup directory does not exist!");
+            }
+            String levelName = Files.readFirstLine(worldName, Charset.defaultCharset());
+            File backupFile = new File(backupDirectory, levelName + "_" + directory.getName() + "_" + DATE_FORMAT.format(Date.from(Instant.now())));
+            backupFile.mkdir();
+            FileUtils.copyDirectoryContents(directory, backupFile);
         }
 
         // Initiate and return a new World (and WorldData) object

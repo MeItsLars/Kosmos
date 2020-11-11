@@ -35,7 +35,7 @@ class KosmosTest {
     void setUp() {
         FileUtils.copyRecursively(SAMPLE_WORLD_FILE, SAMPLE_WORLD_TEST_FILE);
         try {
-            currentTestWorld = World.open(SAMPLE_WORLD_TEST_FILE);
+            currentTestWorld = World.open(SAMPLE_WORLD_TEST_FILE, null);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -53,7 +53,7 @@ class KosmosTest {
     void reOpenTestWorld() {
         try {
             currentTestWorld.close();
-            currentTestWorld = World.open(SAMPLE_WORLD_TEST_FILE);
+            currentTestWorld = World.open(SAMPLE_WORLD_TEST_FILE, null);
         } catch (IOException e) {
             e.printStackTrace();
         }
