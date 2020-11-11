@@ -374,6 +374,7 @@ public class WorldData implements Closeable {
         for (int currentChunkX = minChunkX; currentChunkX <= maxChunkX; currentChunkX++) {
             for (int currentChunkZ = minChunkZ; currentChunkZ <= maxChunkZ; currentChunkZ++) {
                 getChunk(currentChunkX, currentChunkZ).ifPresent(chunk -> {
+                    chunk.ensureChunkSpace(yMax >> 4);
                     chunk.forEachBlock(block -> {
                         if (block.getX() >= xMin && block.getX() <= xMax
                                 && block.getY() >= yMin && block.getY() <= yMax
@@ -479,6 +480,7 @@ public class WorldData implements Closeable {
         for (int currentChunkX = minChunkX; currentChunkX <= maxChunkX; currentChunkX++) {
             for (int currentChunkZ = minChunkZ; currentChunkZ <= maxChunkZ; currentChunkZ++) {
                 getChunk(currentChunkX, currentChunkZ).ifPresent(chunk -> {
+                    chunk.ensureChunkSpace(yMax >> 4);
                     chunk.forEachBlock(block -> {
                         if (block.getX() >= xMin && block.getX() <= xMax
                                 && block.getY() >= yMin && block.getY() <= yMax

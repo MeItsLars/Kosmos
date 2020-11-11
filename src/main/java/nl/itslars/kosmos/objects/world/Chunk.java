@@ -106,7 +106,7 @@ public class Chunk {
      * The desired chunk height may be at most 15, because the world height limit is at 256 blocks.
      * @param desiredChunkHeight The desired chunk height
      */
-    private void ensureChunkSpace(int desiredChunkHeight) {
+    public void ensureChunkSpace(int desiredChunkHeight) {
         // Loop through all chunk heights. If the SubChunk did not yet exist, create a new SubChunk
         for (short currentY = 0; currentY <= Math.min(desiredChunkHeight, 15); currentY++) {
             if (!subChunks.containsKey(currentY)) {
