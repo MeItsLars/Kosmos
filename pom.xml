@@ -6,7 +6,7 @@
 
     <groupId>nl.itslars</groupId>
     <artifactId>kosmos</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
 
     <repositories>
         <repository>
@@ -42,7 +42,7 @@
         <dependency>
             <groupId>com.github.MeItsLars</groupId>
             <artifactId>MCPE-NBT</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
         </dependency>
 
         <!-- JUnit 5 -->
