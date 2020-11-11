@@ -367,11 +367,23 @@ public class WorldData implements Closeable {
         int zMax = Math.max(z, z2);
 
         // Loop through all blocks, and set the block at that position
-        for (int currentX = xMin; currentX <= xMax; currentX++) {
-            for (int currentY = yMin; currentY <= yMax; currentY++) {
-                for (int currentZ = zMin; currentZ <= zMax; currentZ++) {
-                    setBlock(dimension, currentX, currentY, currentZ, name);
-                }
+        int minChunkX = xMin >> 4;
+        int maxChunkX = xMax >> 4;
+        int minChunkZ = zMin >> 4;
+        int maxChunkZ = zMax >> 4;
+        for (int currentChunkX = minChunkX; currentChunkX <= maxChunkX; currentChunkX++) {
+            for (int currentChunkZ = minChunkZ; currentChunkZ <= maxChunkZ; currentChunkZ++) {
+                getChunk(currentChunkX, currentChunkZ).ifPresent(chunk -> {
+                    chunk.forEachBlock(block -> {
+                        if (block.getX() >= xMin && block.getX() <= xMax
+                                && block.getY() >= yMin && block.getY() <= yMax
+                                && block.getZ() >= zMin && block.getZ() <= zMax) {
+                            block = new Block(name, block.getX(), block.getY(), block.getZ());
+                        }
+                        return block;
+                    });
+                    chunk.unload(true);
+                });
             }
         }
     }
@@ -460,20 +472,24 @@ public class WorldData implements Closeable {
         int zMax = Math.max(z, z2);
 
         // Loop through all blocks, and set the block at that position
-        for (int currentX = xMin; currentX <= xMax; currentX++) {
-            for (int currentY = yMin; currentY <= yMax; currentY++) {
-                for (int currentZ = zMin; currentZ <= zMax; currentZ++) {
-                    int finalCurrentX = currentX;
-                    int finalCurrentY = currentY;
-                    int finalCurrentZ = currentZ;
-                    // Retrieves the block at the given location. If it is of the required source type,
-                    // set it to the target block type.
-                    getBlock(currentX, currentY, currentZ).ifPresent(block -> {
-                        if (block.getName().equals(source)) {
-                            setBlock(dimension, finalCurrentX, finalCurrentY, finalCurrentZ, target);
+        int minChunkX = xMin >> 4;
+        int maxChunkX = xMax >> 4;
+        int minChunkZ = zMin >> 4;
+        int maxChunkZ = zMax >> 4;
+        for (int currentChunkX = minChunkX; currentChunkX <= maxChunkX; currentChunkX++) {
+            for (int currentChunkZ = minChunkZ; currentChunkZ <= maxChunkZ; currentChunkZ++) {
+                getChunk(currentChunkX, currentChunkZ).ifPresent(chunk -> {
+                    chunk.forEachBlock(block -> {
+                        if (block.getX() >= xMin && block.getX() <= xMax
+                                && block.getY() >= yMin && block.getY() <= yMax
+                                && block.getZ() >= zMin && block.getZ() <= zMax
+                                && block.getName().equals(source)) {
+                            block = new Block(target, block.getX(), block.getY(), block.getZ());
                         }
+                        return block;
                     });
-                }
+                    chunk.unload(true);
+                });
             }
         }
     }

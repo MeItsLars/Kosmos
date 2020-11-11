@@ -19,8 +19,8 @@ public class SubChunk {
 
     // A one-time-created palette for waterlogged blocks
     private static final List<CompoundTag> WATER_LOGGED_PALETTE = Arrays.asList(
-            new Block(BlockType.AIR).serialize(),
-            new Block(BlockType.WATER).serialize()
+            new Block(BlockType.AIR, 0, 0, 0).serialize(),
+            new Block(BlockType.WATER, 0, 0, 0).serialize()
     );
 
     // The parent Chunk that this SubChunk belongs to
@@ -101,7 +101,10 @@ public class SubChunk {
                     short paletteIndex = serializedSubChunk.getPaletteIndices()[x][y][z];
                     CompoundTag tag = serializedSubChunk.getPalette().get(paletteIndex);
                     // Deserialize the palette CompoundTag into a Block, and set it in the SubChunk
-                    result.getBlocks()[x][y][z] = Block.deserialize(tag);
+                    result.getBlocks()[x][y][z] = Block.deserialize(tag,
+                            x + 16 * serializedSubChunk.getParentChunk().getChunkX(),
+                            y + 16 * serializedSubChunk.getSubChunkHeight(),
+                            z + 16 * serializedSubChunk.getParentChunk().getChunkZ());
                 }
             }
         }
