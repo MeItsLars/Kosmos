@@ -5,8 +5,8 @@ import lombok.SneakyThrows;
 import nl.itslars.kosmos.World;
 import nl.itslars.kosmos.enums.BlockType;
 import nl.itslars.kosmos.enums.Dimension;
-import nl.itslars.kosmos.objects.settings.LevelDatFile;
 import nl.itslars.kosmos.objects.entity.Player;
+import nl.itslars.kosmos.objects.settings.LevelDatFile;
 import nl.itslars.kosmos.util.Chunks;
 import nl.itslars.mcpenbt.NBTUtil;
 import nl.itslars.mcpenbt.enums.HeaderType;
@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -93,6 +94,7 @@ public class WorldData implements Closeable {
     /**
      * Closes the world's LevelDB opening state. This method should ALWAYS be called after a world has been opened!
      * A try-with-resources is recommend to open the world.
+     *
      * @throws IOException Thrown when the closing has failed (due to e.g. deleted files)
      */
     @Override
@@ -107,6 +109,7 @@ public class WorldData implements Closeable {
 
     /**
      * Gets the OVERWORLD chunk at the given chunk X and Z
+     *
      * @param chunkX The chunk X
      * @param chunkZ The chunk Z
      * @return An optional containing the chunk if it was generated, otherwise empty
@@ -118,9 +121,10 @@ public class WorldData implements Closeable {
 
     /**
      * Gets the chunk at the given dimension and chunk X and Z
+     *
      * @param dimension The chunk dimension
-     * @param chunkX The chunk X
-     * @param chunkZ The chunk Z
+     * @param chunkX    The chunk X
+     * @param chunkZ    The chunk Z
      * @return An optional containing the chunk if it was generated, otherwise empty
      */
     public Optional<Chunk> getChunk(Dimension dimension, int chunkX, int chunkZ) {
@@ -149,6 +153,36 @@ public class WorldData implements Closeable {
     }
 
     /**
+     * Loops through all chunk presets, loads them, applies the predicate,
+     * then unloads them and, if necessary, saves them
+     *
+     * @param predicate The predicate. Returns whether the chunk should be saved or not
+     */
+    public void forEachChunk(Predicate<Chunk> predicate) {
+        for (Dimension dimension : Dimension.values()) {
+            forEachChunk(dimension, predicate);
+        }
+    }
+
+    /**
+     * Loops through all chunk presets in the given dimension, loads them, applies the predicate,
+     * then unloads them and, if necessary, saves them
+     *
+     * @param dimension The dimension
+     * @param predicate The predicate. Returns whether the chunk should be saved or not
+     */
+    public void forEachChunk(Dimension dimension, Predicate<Chunk> predicate) {
+        getChunkPresets().get(dimension).entrySet().stream()
+                .flatMap(entry -> entry.getValue().entrySet().stream())
+                .map(Map.Entry::getValue).forEach(preset -> {
+            getChunk(preset.getDimension(), preset.getX(), preset.getZ()).ifPresent(chunk -> {
+                boolean shouldSave = predicate.test(chunk);
+                chunk.unload(shouldSave);
+            });
+        });
+    }
+
+    /**
      * Unloads all cached chunks.
      * When performing big world operations, this might be required (occasionally) to prevent Java heap out of memory errors
      */
@@ -160,6 +194,7 @@ public class WorldData implements Closeable {
 
     /**
      * Retrieves the block in the OVERWORLD at the given coordinates
+     *
      * @param x The block X
      * @param y the block Y
      * @param z the block Z
@@ -171,10 +206,11 @@ public class WorldData implements Closeable {
 
     /**
      * Retrieves the block at the given coordinates, in the given dimension
+     *
      * @param dimension The block dimension
-     * @param x The block X
-     * @param y the block Y
-     * @param z the block Z
+     * @param x         The block X
+     * @param y         the block Y
+     * @param z         the block Z
      * @return An optional containing the block if present, empty otherwise
      */
     public Optional<Block> getBlock(Dimension dimension, int x, int y, int z) {
@@ -191,9 +227,10 @@ public class WorldData implements Closeable {
 
     /**
      * Sets a block in the OVERWORLD at the given location
-     * @param x The block X
-     * @param y The block Y
-     * @param z The block Z
+     *
+     * @param x         The block X
+     * @param y         The block Y
+     * @param z         The block Z
      * @param blockType The {@link BlockType}
      * @return An optional containing the block if it was successfully set, empty otherwise
      */
@@ -203,9 +240,10 @@ public class WorldData implements Closeable {
 
     /**
      * Sets a block in the OVERWORLD at the given location
-     * @param x The block X
-     * @param y The block Y
-     * @param z The block Z
+     *
+     * @param x    The block X
+     * @param y    The block Y
+     * @param z    The block Z
      * @param name The block name
      * @return An optional containing the block if it was successfully set, empty otherwise
      */
@@ -215,10 +253,11 @@ public class WorldData implements Closeable {
 
     /**
      * Sets a block in given location and dimension
+     *
      * @param dimension The block dimension
-     * @param x The block X
-     * @param y The block Y
-     * @param z The block Z
+     * @param x         The block X
+     * @param y         The block Y
+     * @param z         The block Z
      * @param blockType The {@link BlockType}
      * @return An optional containing the block if it was successfully set, empty otherwise
      */
@@ -228,11 +267,12 @@ public class WorldData implements Closeable {
 
     /**
      * Sets a block in given location and dimension
+     *
      * @param dimension The block dimension
-     * @param x The block X
-     * @param y The block Y
-     * @param z The block Z
-     * @param name The block name
+     * @param x         The block X
+     * @param y         The block Y
+     * @param z         The block Z
+     * @param name      The block name
      * @return An optional containing the block if it was successfully set, empty otherwise
      */
     public Optional<Block> setBlock(Dimension dimension, int x, int y, int z, String name) {
@@ -252,12 +292,13 @@ public class WorldData implements Closeable {
      * Note that this method is relatively slow for larger areas. It may also cause Java heap out of memory errors.
      * A faster (possibly multi-threaded) solution may be created in the future. If you create one yourself, please
      * create a PR on GitHub so people can use it!
-     * @param x The starting block X
-     * @param y The starting block Y
-     * @param z The starting block Z
-     * @param x2 The ending block X
-     * @param y2 The ending block Y
-     * @param z2 The ending block Z
+     *
+     * @param x         The starting block X
+     * @param y         The starting block Y
+     * @param z         The starting block Z
+     * @param x2        The ending block X
+     * @param y2        The ending block Y
+     * @param z2        The ending block Z
      * @param blockType The Block Type to fill
      */
     public void fill(int x, int y, int z, int x2, int y2, int z2, BlockType blockType) {
@@ -269,12 +310,13 @@ public class WorldData implements Closeable {
      * Note that this method is relatively slow for larger areas. It may also cause Java heap out of memory errors.
      * A faster (possibly multi-threaded) solution may be created in the future. If you create one yourself, please
      * create a PR on GitHub so people can use it!
-     * @param x The starting block X
-     * @param y The starting block Y
-     * @param z The starting block Z
-     * @param x2 The ending block X
-     * @param y2 The ending block Y
-     * @param z2 The ending block Z
+     *
+     * @param x    The starting block X
+     * @param y    The starting block Y
+     * @param z    The starting block Z
+     * @param x2   The ending block X
+     * @param y2   The ending block Y
+     * @param z2   The ending block Z
      * @param name The name of the block to fill
      */
     public void fill(int x, int y, int z, int x2, int y2, int z2, String name) {
@@ -286,13 +328,14 @@ public class WorldData implements Closeable {
      * Note that this method is relatively slow for larger areas. It may also cause Java heap out of memory errors.
      * A faster (possibly multi-threaded) solution may be created in the future. If you create one yourself, please
      * create a PR on GitHub so people can use it!
+     *
      * @param dimension The fill dimension
-     * @param x The starting block X
-     * @param y The starting block Y
-     * @param z The starting block Z
-     * @param x2 The ending block X
-     * @param y2 The ending block Y
-     * @param z2 The ending block Z
+     * @param x         The starting block X
+     * @param y         The starting block Y
+     * @param z         The starting block Z
+     * @param x2        The ending block X
+     * @param y2        The ending block Y
+     * @param z2        The ending block Z
      * @param blockType The Block Type to fill
      */
     public void fill(Dimension dimension, int x, int y, int z, int x2, int y2, int z2, BlockType blockType) {
@@ -304,14 +347,15 @@ public class WorldData implements Closeable {
      * Note that this method is relatively slow for larger areas. It may also cause Java heap out of memory errors.
      * A faster (possibly multi-threaded) solution may be created in the future. If you create one yourself, please
      * create a PR on GitHub so people can use it!
+     *
      * @param dimension The fill dimension
-     * @param x The starting block X
-     * @param y The starting block Y
-     * @param z The starting block Z
-     * @param x2 The ending block X
-     * @param y2 The ending block Y
-     * @param z2 The ending block Z
-     * @param name The name of the block to fill
+     * @param x         The starting block X
+     * @param y         The starting block Y
+     * @param z         The starting block Z
+     * @param x2        The ending block X
+     * @param y2        The ending block Y
+     * @param z2        The ending block Z
+     * @param name      The name of the block to fill
      */
     public void fill(Dimension dimension, int x, int y, int z, int x2, int y2, int z2, String name) {
         // Convert the coordinates to a min/max list
@@ -337,12 +381,13 @@ public class WorldData implements Closeable {
      * Note that this method is relatively slow for larger areas. It may also cause Java heap out of memory errors.
      * A faster (possibly multi-threaded) solution may be created in the future. If you create one yourself, please
      * create a PR on GitHub so people can use it!
-     * @param x The starting block X
-     * @param y The starting block Y
-     * @param z The starting block Z
-     * @param x2 The ending block X
-     * @param y2 The ending block Y
-     * @param z2 The ending block Z
+     *
+     * @param x      The starting block X
+     * @param y      The starting block Y
+     * @param z      The starting block Z
+     * @param x2     The ending block X
+     * @param y2     The ending block Y
+     * @param z2     The ending block Z
      * @param source The Block Type that is to be replaced
      * @param target The Block Type that will be placed
      */
@@ -355,12 +400,13 @@ public class WorldData implements Closeable {
      * Note that this method is relatively slow for larger areas. It may also cause Java heap out of memory errors.
      * A faster (possibly multi-threaded) solution may be created in the future. If you create one yourself, please
      * create a PR on GitHub so people can use it!
-     * @param x The starting block X
-     * @param y The starting block Y
-     * @param z The starting block Z
-     * @param x2 The ending block X
-     * @param y2 The ending block Y
-     * @param z2 The ending block Z
+     *
+     * @param x      The starting block X
+     * @param y      The starting block Y
+     * @param z      The starting block Z
+     * @param x2     The ending block X
+     * @param y2     The ending block Y
+     * @param z2     The ending block Z
      * @param source The name of the block that is to be replaced
      * @param target The name of the block that will be placed
      */
@@ -373,15 +419,16 @@ public class WorldData implements Closeable {
      * Note that this method is relatively slow for larger areas. It may also cause Java heap out of memory errors.
      * A faster (possibly multi-threaded) solution may be created in the future. If you create one yourself, please
      * create a PR on GitHub so people can use it!
+     *
      * @param dimension The replacement dimension
-     * @param x The starting block X
-     * @param y The starting block Y
-     * @param z The starting block Z
-     * @param x2 The ending block X
-     * @param y2 The ending block Y
-     * @param z2 The ending block Z
-     * @param source The Block Type that is to be replaced
-     * @param target The Block Type that will be placed
+     * @param x         The starting block X
+     * @param y         The starting block Y
+     * @param z         The starting block Z
+     * @param x2        The ending block X
+     * @param y2        The ending block Y
+     * @param z2        The ending block Z
+     * @param source    The Block Type that is to be replaced
+     * @param target    The Block Type that will be placed
      */
     public void replace(Dimension dimension, int x, int y, int z, int x2, int y2, int z2, BlockType source, BlockType target) {
         replace(dimension, x, y, z, x2, y2, z2, source.getNameSpacedId(), target.getNameSpacedId());
@@ -392,15 +439,16 @@ public class WorldData implements Closeable {
      * Note that this method is relatively slow for larger areas. It may also cause Java heap out of memory errors.
      * A faster (possibly multi-threaded) solution may be created in the future. If you create one yourself, please
      * create a PR on GitHub so people can use it!
+     *
      * @param dimension The replacement dimension
-     * @param x The starting block X
-     * @param y The starting block Y
-     * @param z The starting block Z
-     * @param x2 The ending block X
-     * @param y2 The ending block Y
-     * @param z2 The ending block Z
-     * @param source The name of the block that is to be replaced
-     * @param target The name of the block that will be placed
+     * @param x         The starting block X
+     * @param y         The starting block Y
+     * @param z         The starting block Z
+     * @param x2        The ending block X
+     * @param y2        The ending block Y
+     * @param z2        The ending block Z
+     * @param source    The name of the block that is to be replaced
+     * @param target    The name of the block that will be placed
      */
     public void replace(Dimension dimension, int x, int y, int z, int x2, int y2, int z2, String source, String target) {
         // Convert the coordinates to a min/max list
@@ -436,6 +484,7 @@ public class WorldData implements Closeable {
 
     /**
      * Retrieves the set of all loaded players
+     *
      * @return The set containing all loaded players
      */
     public Set<Player> getPlayers() {
@@ -444,8 +493,9 @@ public class WorldData implements Closeable {
 
     /**
      * Adds a player with the given player key (~local_player or player_server_?)
+     *
      * @param player The player entity object
-     * @param key The player LevelDB key
+     * @param key    The player LevelDB key
      */
     public void addPlayer(Player player, byte[] key) {
         players.put(player, key);
@@ -454,7 +504,8 @@ public class WorldData implements Closeable {
     /**
      * Adds a player pointer to the player pointer list. I have no clue what these are used for, but they are
      * player data, so I'm just storing them.
-     * @param pointerKey The pointer key (player_x)
+     *
+     * @param pointerKey    The pointer key (player_x)
      * @param pointerTarget The target player (player_server_x)
      */
     public void addPlayerPointer(byte[] pointerKey, byte[] pointerTarget) {
@@ -464,6 +515,7 @@ public class WorldData implements Closeable {
     /**
      * Deletes a player and the associated pointer(s) from the player data, and adds their keys to the
      * deletionKeys array, that is used when the world is saved.
+     *
      * @param player The Player object
      */
     public void deletePlayer(Player player) {

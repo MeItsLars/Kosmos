@@ -37,7 +37,7 @@ Kosmos was made in Java 8, and can be used using the following Maven dependency 
 <dependency>
     <groupId>com.github.MeItsLars</groupId>
     <artifactId>Kosmos</artifactId>
-    <version>1.0.4</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
@@ -46,7 +46,9 @@ Kosmos has a full JavaDoc documentation: https://javadoc.jitpack.io/com/github/M
 Using Kosmos is really easy, that's what it was made for. First, you need to open the world like this:
 ```java
 File file = new File("PATH/TO/YOUR/WORLD");
-try (WorldData world = World.open(file)) {
+File backup = new File("PATH/TO/YOUR/BACKUP/FOLDER");
+
+try (WorldData world = World.open(file, backup)) {
   // The world has been opened! Do your stuff here...
   world.save();
 } catch (IOException exception) {
