@@ -9,6 +9,7 @@ import nl.itslars.kosmos.objects.entity.TileEntity;
 import nl.itslars.kosmos.util.Chunks;
 
 import java.util.*;
+import java.util.function.UnaryOperator;
 
 /**
  * Class for representing a Chunk. Note the difference between this class and a {@link SubChunk}.
@@ -93,7 +94,7 @@ public class Chunk {
         SubChunk subChunk = subChunks.get(chunkY);
         // If the SubChunk was not null, create, set, and return the block
         if (subChunk != null) {
-            Block result = new Block(name);
+            Block result = new Block(name, translatedX + 16 * chunkX, y, translatedZ + 16 * chunkZ);
             subChunk.getBlocks()[translatedX][y - (16 * chunkY)][translatedZ] = result;
             return Optional.of(result);
         }
@@ -125,11 +126,30 @@ public class Chunk {
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
                 for (int z = 0; z < 16; z++) {
-                    blocks[x][y][z] = new Block(BlockType.AIR);
+                    blocks[x][y][z] = new Block(BlockType.AIR, x + 16 * chunkX, y + 16 * chunkY, z + 16 * chunkZ);
                 }
             }
         }
         return new SubChunk(this, chunkY, blocks);
+    }
+
+    /**
+     * Loops through all blocks in the chunk, and applies the function to those blocks.
+     * The block resets to the given function result.
+     *
+     * @param function The function, returns the new block position
+     */
+    public void forEachBlock(UnaryOperator<Block> function) {
+        for (SubChunk subChunk : subChunks.values()) {
+            Block[][][] blocks = subChunk.getBlocks();
+            for (int x = 0; x < 16; x++) {
+                for (int y = 0; y < 16; y++) {
+                    for (int z = 0; z < 16; z++) {
+                        blocks[x][y][z] = function.apply(blocks[x][y][z]);
+                    }
+                }
+            }
+        }
     }
 
     /**
