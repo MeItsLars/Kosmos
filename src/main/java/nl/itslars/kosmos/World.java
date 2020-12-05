@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * Class for representing the LevelDB storage communication for a world.
@@ -64,8 +65,15 @@ public class World {
         iterator.seekToFirst();
 
         // Loop through all entries in the LevelDB database
-        while (iterator.hasNext()) {
-            Map.Entry<byte[], byte[]> entry = iterator.next();
+        Map.Entry<byte[], byte[]> entry;
+
+        try {
+            entry = iterator.next();
+        } catch (NoSuchElementException e) {
+            return;
+        }
+
+        while (entry != null) {
             byte[] key = entry.getKey();
             byte[] value = entry.getValue();
             String keyName = new String(key);
@@ -82,7 +90,7 @@ public class World {
                     byte[] pointer = tag.getAsString().getValue().getBytes();
                     worldData.addPlayerPointer(key, pointer);
                 });
-            } else if (keyName.matches("^[a-zA-Z]*$")) {
+            } else if (keyName.matches("^[a-zA-Z]*$") || keyName.startsWith("map_")) {
                 // Check if the key represents a data attribute and if so, ignore it
                 // This check can NOT be removed, otherwise the next chunk load may trigger an exception
             } else if (key.length >= 8 && key.length <= 14) {
@@ -98,6 +106,18 @@ public class World {
                 Dimension finalDimension = dimension;
                 worldData.getChunkPresets().get(finalDimension).computeIfAbsent(chunkX, x -> new HashMap<>())
                         .put(chunkZ, new ChunkPreset(worldData, chunkX, chunkZ, finalDimension));
+            }
+
+            entry = null;
+            while (entry == null) {
+                try {
+                    entry = iterator.next();
+                } catch (NoSuchElementException e) {
+                    return;
+                } catch (NumberFormatException e) {
+                    System.out.println("WARNING: Possibly critical failure. LevelDB failed to parse an entry!");
+                    entry = iterator.next();
+                }
             }
         }
     }
