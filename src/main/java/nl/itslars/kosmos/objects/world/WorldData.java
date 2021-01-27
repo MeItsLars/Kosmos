@@ -103,6 +103,58 @@ public class WorldData implements Closeable {
         world.close();
     }
 
+    /**
+     * Returns whether the OVERWORLD chunk is generated in the world
+     *
+     * @param dimension The chunk dimension
+     * @param chunkX    The chunk X
+     * @param chunkZ    The chunk Z
+     * @return is the chunk generated
+     */
+    public boolean isGenerated(Dimension dimension, int chunkX, int chunkZ) {
+        Map<Integer, ChunkPreset> zChunkPresets = chunkPresets.get(dimension).get(chunkX);
+        if (zChunkPresets == null) return false;
+        ChunkPreset chunkPreset = zChunkPresets.get(chunkZ);
+        return chunkPreset != null;
+    }
+
+    /**
+     * Returns whether the OVERWORLD chunk is generated in the world
+     *
+     * @param chunkX    The chunk X
+     * @param chunkZ    The chunk Z
+     * @return is the chunk generated
+     */
+    public boolean isGenerated(int chunkX, int chunkZ) {
+        return isGenerated(Dimension.OVERWORLD, chunkX, chunkZ);
+    }
+
+    /**
+     * Returns whether the OVERWORLD chunk is loaded and cached by the library
+     *
+     * @param dimension The chunk dimension
+     * @param chunkX    The chunk X
+     * @param chunkZ    The chunk Z
+     * @return is the chunk cached
+     */
+    public boolean isCached(Dimension dimension, int chunkX, int chunkZ) {
+        Map<Integer, Chunk> zChunks = cachedChunks.get(dimension).get(chunkX);
+        if (zChunks == null) return false;
+        Chunk chunk = zChunks.get(chunkZ);
+        return chunk != null;
+    }
+
+    /**
+     * Returns whether the OVERWORLD chunk is loaded and cached by the library
+     *
+     * @param chunkX    The chunk X
+     * @param chunkZ    The chunk Z
+     * @return is the chunk cached
+     */
+    public boolean isCached(int chunkX, int chunkZ) {
+        return isCached(Dimension.OVERWORLD, chunkX, chunkZ);
+    }
+
     // ==============================================================
     //                 WORLD MODIFICATION METHODS
     // ==============================================================
