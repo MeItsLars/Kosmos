@@ -3,6 +3,7 @@ package nl.itslars.kosmos.objects.world;
 import lombok.Getter;
 import lombok.Setter;
 import nl.itslars.kosmos.enums.BlockType;
+import nl.itslars.kosmos.objects.entity.TileEntity;
 import nl.itslars.mcpenbt.tags.CompoundTag;
 import nl.itslars.mcpenbt.tags.IntTag;
 import nl.itslars.mcpenbt.tags.StringTag;
@@ -36,6 +37,9 @@ public class Block {
     private final int x;
     private final int y;
     private final int z;
+    // Tile entity associated with this block
+    @Setter
+    private TileEntity tileEntity;
 
     public Block(CompoundTag states, String name, int version, int x, int y, int z) {
         this.states = states;

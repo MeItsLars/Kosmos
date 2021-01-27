@@ -44,6 +44,7 @@ public class Chunks {
         loadChunkEntities(db, chunk);
         loadChunkTileEntities(db, chunk);
         loadChunkSubChunks(db, chunk);
+        linkTileEntities(chunk);
         return chunk;
     }
 
@@ -232,6 +233,22 @@ public class Chunks {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * Links TileEntities to Blocks
+     * @param chunk The chunk object
+     */
+    private static void linkTileEntities(Chunk chunk) {
+        for (TileEntity tileEntity : chunk.getTileEntities()) {
+            int localX = tileEntity.getX() % 16;
+            int localZ = tileEntity.getZ() % 16;
+            if (localX < 0) localX += 16;
+            if (localZ < 0) localZ += 16;
+            chunk.getBlock(localX, tileEntity.getY(), localZ).ifPresent(block -> {
+                block.setTileEntity(tileEntity);
+            });
         }
     }
 
