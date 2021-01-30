@@ -616,4 +616,42 @@ public class WorldData implements Closeable {
         players.clear();
         playerPointers.clear();
     }
+
+    /**
+     * Deletes the OVERWORLD chunk at the given chunk X and Z
+     *
+     * @param chunkX The chunk X
+     * @param chunkZ The chunk Z
+     */
+    public void deleteChunk(int chunkX, int chunkZ) {
+        deleteChunk(Dimension.OVERWORLD, chunkX, chunkZ);
+    }
+
+    /**
+     * Deletes the chunk at the given dimension and chunk X and Z
+     *
+     * @param dimension The chunk dimension
+     * @param chunkX    The chunk X
+     * @param chunkZ    The chunk Z
+     */
+    public void deleteChunk(Dimension dimension, int chunkX, int chunkZ) {
+        // If chunk is not generated, we don't have to remove it
+        if (!isGenerated(dimension, chunkZ, chunkX)) return;
+        // Remove chunk preset
+        ChunkPreset chunkPreset = chunkPresets.get(dimension).get(chunkX).remove(chunkZ);
+        // If the new map is empty, remove it entirely from the preset map
+        if (chunkPresets.get(dimension).get(chunkX).isEmpty()) {
+            chunkPresets.get(dimension).remove(chunkX);
+        }
+        // Add all chunk related keys to deletionKeys
+        deletionKeys.addAll(Chunks.getDeletionKeys(chunkPreset));
+        // If chunk was already cached, we also need to remove the cache
+        if (isCached(dimension, chunkZ, chunkX)) {
+            cachedChunks.get(dimension).get(chunkX).remove(chunkZ);
+            // If the new map is empty, remove it entirely from the chunk map
+            if (cachedChunks.get(dimension).get(chunkX).isEmpty()) {
+                cachedChunks.get(dimension).remove(chunkX);
+            }
+        }
+    }
 }

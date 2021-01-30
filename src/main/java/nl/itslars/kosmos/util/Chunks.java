@@ -31,6 +31,26 @@ public class Chunks {
     }
 
     /**
+     * Returns a list of keys to delete from LevelDB to delete a chunk
+     * @param preset The chunk preset to delete
+     * @return list of keys to delete
+     */
+    public static List<byte[]> getDeletionKeys(ChunkPreset preset) {
+        ArrayList<byte[]> result = new ArrayList<>(19);
+        // 2D Data
+        result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 45, (byte) 0));
+        // Entities
+        result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 49, (byte) 0));
+        // Tile Entities
+        result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 50, (byte) 0));
+        // SubChunks
+        for (byte subChunkHeight = 0; subChunkHeight < 16; subChunkHeight++) {
+            result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 47, subChunkHeight));
+        }
+        return result;
+    }
+
+    /**
      * Loads a chunk from the given preset from the LevelDB storage
      * @param db The LevelDB storage
      * @param preset The chunk preset
