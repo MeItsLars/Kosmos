@@ -198,4 +198,12 @@ public class Chunk {
             world.getCachedChunks().get(dimension).remove(chunkX);
         }
     }
+
+    /**
+     * Deletes the current chunk from the world
+     */
+    public void delete() {
+        world.deleteChunk(getDimension(), getChunkX(), getChunkZ());
+    }
+
 }
