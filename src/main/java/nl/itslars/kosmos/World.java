@@ -116,7 +116,6 @@ public class World {
                     return;
                 } catch (NumberFormatException e) {
                     System.out.println("WARNING: Possibly critical failure. LevelDB failed to parse an entry!");
-                    entry = iterator.next();
                 }
             }
         }
