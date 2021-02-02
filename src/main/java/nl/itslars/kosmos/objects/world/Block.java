@@ -79,12 +79,18 @@ public class Block {
         Optional<Tag> statesTag = compoundTag.getByName("states");
         Optional<Tag> nameTag = compoundTag.getByName("name");
         Optional<Tag> versionTag = compoundTag.getByName("version");
-        if (!statesTag.isPresent() || !nameTag.isPresent() || !versionTag.isPresent()) {
+        if (statesTag.isPresent() & nameTag.isPresent() && versionTag.isPresent()) {
+            CompoundTag states = statesTag.get().getAsCompound();
+            String name = nameTag.get().getAsString().getValue();
+            int version = versionTag.get().getAsInt().getValue();
+            return new Block(states, name, version, x, y, z);
+        }
+        // Older worlds and worlds converted from Java might not have those tags present
+        else if (nameTag.isPresent()) {
+            String name = nameTag.get().getAsString().getValue();
+            return new Block(name, x, y, z);
+        } else {
             throw new IllegalStateException("Failed to deserialize the block, a parsing error occured.");
         }
-        CompoundTag states = statesTag.get().getAsCompound();
-        String name = nameTag.get().getAsString().getValue();
-        int version = versionTag.get().getAsInt().getValue();
-        return new Block(states, name, version, x, y, z);
     }
 }
