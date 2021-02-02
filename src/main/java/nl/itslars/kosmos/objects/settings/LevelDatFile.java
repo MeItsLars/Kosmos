@@ -96,6 +96,15 @@ public class LevelDatFile {
     }
 
     /**
+     * Returns whether the gamerule provided is set in dat file.
+     * @param gameRule The gamerule
+     * @return Boolean whether the gamerule is set
+     */
+    public boolean hasGameRule(GameRule gameRule) {
+        return parentCompoundTag.getByName(gameRule.getLevelDatName()).isPresent();
+    }
+
+    /**
      * Sets the game's cheat state to the given boolean value
      * @param value The cheat state (true if enabled, false if disabled)
      */
