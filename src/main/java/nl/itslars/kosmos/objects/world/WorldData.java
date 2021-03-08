@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -224,14 +225,17 @@ public class WorldData implements Closeable {
      * @param predicate The predicate. Returns whether the chunk should be saved or not
      */
     public void forEachChunk(Dimension dimension, Predicate<Chunk> predicate) {
-        getChunkPresets().get(dimension).entrySet().stream()
-                .flatMap(entry -> entry.getValue().entrySet().stream())
-                .map(Map.Entry::getValue).forEach(preset -> {
-            getChunk(preset.getDimension(), preset.getX(), preset.getZ()).ifPresent(chunk -> {
-                boolean shouldSave = predicate.test(chunk);
-                chunk.unload(shouldSave);
-            });
-        });
+        Collections.unmodifiableList(
+                getChunkPresets().get(dimension).entrySet().stream()
+                        .flatMap(entry -> entry.getValue().entrySet().stream())
+                        .map(Map.Entry::getValue).collect(Collectors.toList())
+        )
+                .forEach(preset -> {
+                    getChunk(preset.getDimension(), preset.getX(), preset.getZ()).ifPresent(chunk -> {
+                        boolean shouldSave = predicate.test(chunk);
+                        chunk.unload(shouldSave);
+                    });
+                });
     }
 
     /**
@@ -273,7 +277,9 @@ public class WorldData implements Closeable {
         // Attempt to load the chunk. If it did not exist, return an empty optional.
         // Otherwise, return the given block in the chunk
         Optional<Chunk> chunkOptional = getChunk(dimension, chunkX, chunkZ);
-        if (!chunkOptional.isPresent()) return Optional.empty();
+        if (!chunkOptional.isPresent()) {
+            return Optional.empty();
+        }
         return chunkOptional.get().getBlock(x - (16 * chunkX), y, z - (16 * chunkZ));
     }
 
@@ -335,7 +341,9 @@ public class WorldData implements Closeable {
         // Attempt to load the chunk. If it did not exist, return an empty optional.
         // Otherwise, set the block at the location, and return it
         Optional<Chunk> chunkOptional = getChunk(dimension, chunkX, chunkZ);
-        if (!chunkOptional.isPresent()) return Optional.empty();
+        if (!chunkOptional.isPresent()) {
+            return Optional.empty();
+        }
         return chunkOptional.get().setBlock(x - (16 * chunkX), y, z - (16 * chunkZ), name);
     }
 
@@ -636,7 +644,9 @@ public class WorldData implements Closeable {
      */
     public void deleteChunk(Dimension dimension, int chunkX, int chunkZ) {
         // If chunk is not generated, we don't have to remove it
-        if (!isGenerated(dimension, chunkZ, chunkX)) return;
+        if (!isGenerated(dimension, chunkZ, chunkX)) {
+            return;
+        }
         // Remove chunk preset
         ChunkPreset chunkPreset = chunkPresets.get(dimension).get(chunkX).remove(chunkZ);
         // If the new map is empty, remove it entirely from the preset map
