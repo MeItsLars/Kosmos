@@ -77,6 +77,8 @@ public class Chunks {
         // Generate the level DB key
         byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 45, (byte) 0);
         byte[] value = db.get(levelDBKey);
+        // Sometimes when chunk is generated completely empty, it doesn't have data on terrain
+        if (value == null) return;
 
         // Loop through the 2d chunk, and set the chunk's elevation and biomes accordingly
         for (int z = 0; z < 16; z++) {
