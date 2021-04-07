@@ -36,17 +36,19 @@ public class Chunks {
      * @return list of keys to delete
      */
     public static List<byte[]> getDeletionKeys(ChunkPreset preset) {
-        ArrayList<byte[]> result = new ArrayList<>(19);
-        // 2D Data
-        result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 45, (byte) 0));
-        // Entities
-        result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 49, (byte) 0));
-        // Tile Entities
-        result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 50, (byte) 0));
-        // SubChunks
-        for (byte subChunkHeight = 0; subChunkHeight < 16; subChunkHeight++) {
-            result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 47, subChunkHeight));
+        ArrayList<byte[]> result = new ArrayList<>();
+        // Remove ALL keys related to the chunk (along with legacy ones)
+        for (int i = 44; i <= 59; i++) {
+            if (i != 47) {
+                result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) i, (byte) 0));
+            } else {
+                // SubChunks
+                for (byte subChunkHeight = 0; subChunkHeight < 16; subChunkHeight++) {
+                    result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 47, subChunkHeight));
+                }
+            }
         }
+        result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 118, (byte) 0));
         return result;
     }
 
