@@ -79,7 +79,7 @@ public class Block {
         Optional<Tag> statesTag = compoundTag.getByName("states");
         Optional<Tag> nameTag = compoundTag.getByName("name");
         Optional<Tag> versionTag = compoundTag.getByName("version");
-        if (statesTag.isPresent() & nameTag.isPresent() && versionTag.isPresent()) {
+        if (statesTag.isPresent() && nameTag.isPresent() && versionTag.isPresent()) {
             CompoundTag states = statesTag.get().getAsCompound();
             String name = nameTag.get().getAsString().getValue();
             int version = versionTag.get().getAsInt().getValue();
