@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -102,6 +104,36 @@ public class WorldData implements Closeable {
     public void close() throws IOException {
         unloadChunks();
         world.close();
+    }
+
+    /**
+     * Returns a number of all chunks in the dimension
+     *
+     * @param dimension The dimension
+     * @return chunk count
+     */
+    public int getChunkCount(Dimension dimension) {
+        if (chunkPresets.get(dimension) == null) {
+            return 0;
+        }
+        int result = 0;
+        for (Map<Integer, ChunkPreset> map : chunkPresets.get(dimension).values()) {
+            result += map.size();
+        }
+        return result;
+    }
+
+    /**
+     * Returns a number of all chunks in all dimensions
+     *
+     * @return chunk count
+     */
+    public int getChunkCount() {
+        int result = 0;
+        for (Dimension dimension : Dimension.values()) {
+            result += getChunkCount(dimension);
+        }
+        return result;
     }
 
     /**
@@ -236,6 +268,71 @@ public class WorldData implements Closeable {
                         chunk.unload(shouldSave);
                     });
                 });
+    }
+
+    /**
+     * Loops through all chunk presets, loads them, applies the predicate,
+     * then unloads them and, if necessary, saves them.
+     * This method won't stop in case of an exception.
+     *
+     * @param predicate The predicate. Returns whether the chunk should be saved or not
+     */
+    public void forEachChunk(BiFunction<Chunk, Exception, Boolean> predicate) {
+        for (Dimension dimension : Dimension.values()) {
+            forEachChunk(dimension, predicate);
+        }
+    }
+
+    /**
+     * Loops through all chunk presets in the given dimension, loads them, applies the predicate,
+     * then unloads them and, if necessary, saves them.
+     * This method won't stop in case of an exception.
+     *
+     * @param dimension The dimension
+     * @param predicate The predicate. Returns whether the chunk should be saved or not
+     */
+    public void forEachChunk(Dimension dimension, BiFunction<Chunk, Exception, Boolean> predicate) {
+        Collections.unmodifiableList(
+                        getChunkPresets().get(dimension).entrySet().stream()
+                                .flatMap(entry -> entry.getValue().entrySet().stream())
+                                .map(Map.Entry::getValue).collect(Collectors.toList())
+                )
+                .forEach(preset -> {
+                    try {
+                        getChunk(preset.getDimension(), preset.getX(), preset.getZ()).ifPresent(chunk -> {
+                            boolean shouldSave = predicate.apply(chunk, null);
+                            chunk.unload(shouldSave);
+                        });
+                    } catch (Exception e) {
+                        predicate.apply(null, e);
+                    }
+                });
+    }
+
+    /**
+     * Loops through all chunk presets and applies the consumer
+     *
+     * @param consumer The consumer
+     */
+    public void forEachChunkPreset(Consumer<ChunkPreset> consumer) {
+        for (Dimension dimension : Dimension.values()) {
+            forEachChunkPreset(dimension, consumer);
+        }
+    }
+
+    /**
+     * Loops through all chunk presets in the given dimension and applies the consumer
+     *
+     * @param dimension The dimension
+     * @param consumer The consumer
+     */
+    public void forEachChunkPreset(Dimension dimension, Consumer<ChunkPreset> consumer) {
+        Collections.unmodifiableList(
+                getChunkPresets().get(dimension).entrySet().stream()
+                        .flatMap(entry -> entry.getValue().entrySet().stream())
+                        .map(Map.Entry::getValue).collect(Collectors.toList())
+        )
+                .forEach(consumer);
     }
 
     /**
