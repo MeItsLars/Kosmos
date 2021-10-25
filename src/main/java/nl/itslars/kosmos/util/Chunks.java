@@ -164,8 +164,11 @@ public class Chunks {
                 int version = inputStream.read();
                 // Read the amount of storage sections in this subchunk (1 default, 2 for water logging)
                 int storageCount = 1;
-                if (version == 8) {
+                if (version >= 8) {
                     storageCount = inputStream.read();
+                }
+                if (version >= 9) {
+                    inputStream.read();
                 }
                 SubChunk resultingSubChunk = null;
                 // Loop through all storage sections
