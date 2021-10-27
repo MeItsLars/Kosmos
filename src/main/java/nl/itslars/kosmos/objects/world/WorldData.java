@@ -723,6 +723,24 @@ public class WorldData implements Closeable {
     }
 
     /**
+     * Deletes given chunk
+     *
+     * @param chunk The chunk
+     */
+    public void deleteChunk(Chunk chunk) {
+        deleteChunk(chunk.getDimension(), chunk.getChunkX(), chunk.getChunkZ());
+    }
+
+    /**
+     * Deletes given chunk
+     *
+     * @param chunk The chunk preset
+     */
+    public void deleteChunk(ChunkPreset chunk) {
+        deleteChunk(chunk.getDimension(), chunk.getX(), chunk.getZ());
+    }
+
+    /**
      * Deletes the OVERWORLD chunk at the given chunk X and Z
      *
      * @param chunkX The chunk X
