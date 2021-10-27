@@ -5,6 +5,7 @@ import nl.itslars.mcpenbt.tags.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -29,11 +30,23 @@ public class CustomEntity extends Entity {
      * @param componentGroups added component groups
      */
     public CustomEntity(String identifier, float x, float y, float z, String... componentGroups) {
+        this(identifier, x, y, z, Arrays.asList(componentGroups));
+    }
+
+    /**
+     *
+     * @param identifier entity identifier
+     * @param x x
+     * @param y y
+     * @param z z
+     * @param componentGroups added component groups
+     */
+    public CustomEntity(String identifier, float x, float y, float z, List<String> componentGroups) {
         super(getEmpty());
         setIdentifier(identifier);
         ArrayList<String> defs = new ArrayList<>();
         defs.add("+" + identifier);
-        defs.addAll(Arrays.stream(componentGroups).map(s -> "+" + s).collect(Collectors.toList()));
+        defs.addAll(componentGroups.stream().map(s -> "+" + s).collect(Collectors.toList()));
         setDefinitions(defs);
         setPosition(x, y, z);
         setRotation(0, 0);
