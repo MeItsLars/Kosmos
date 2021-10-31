@@ -31,6 +31,28 @@ public class Chunks {
     }
 
     /**
+     * Returns a list of keys to delete from LevelDB to delete a chunk
+     * @param preset The chunk preset to delete
+     * @return list of keys to delete
+     */
+    public static List<byte[]> getDeletionKeys(ChunkPreset preset) {
+        ArrayList<byte[]> result = new ArrayList<>();
+        // Remove ALL keys related to the chunk (along with legacy ones)
+        for (int i = 44; i <= 59; i++) {
+            if (i != 47) {
+                result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) i, (byte) 0));
+            } else {
+                // SubChunks
+                for (byte subChunkHeight = 0; subChunkHeight < 16; subChunkHeight++) {
+                    result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 47, subChunkHeight));
+                }
+            }
+        }
+        result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 118, (byte) 0));
+        return result;
+    }
+
+    /**
      * Loads a chunk from the given preset from the LevelDB storage
      * @param db The LevelDB storage
      * @param preset The chunk preset
@@ -44,6 +66,7 @@ public class Chunks {
         loadChunkEntities(db, chunk);
         loadChunkTileEntities(db, chunk);
         loadChunkSubChunks(db, chunk);
+        linkTileEntities(chunk);
         return chunk;
     }
 
@@ -56,6 +79,8 @@ public class Chunks {
         // Generate the level DB key
         byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 45, (byte) 0);
         byte[] value = db.get(levelDBKey);
+        // Sometimes when chunk is generated completely empty, it doesn't have data on terrain
+        if (value == null) return;
 
         // Loop through the 2d chunk, and set the chunk's elevation and biomes accordingly
         for (int z = 0; z < 16; z++) {
@@ -139,8 +164,11 @@ public class Chunks {
                 int version = inputStream.read();
                 // Read the amount of storage sections in this subchunk (1 default, 2 for water logging)
                 int storageCount = 1;
-                if (version == 8) {
+                if (version >= 8) {
                     storageCount = inputStream.read();
+                }
+                if (version >= 9) {
+                    inputStream.read();
                 }
                 SubChunk resultingSubChunk = null;
                 // Loop through all storage sections
@@ -232,6 +260,22 @@ public class Chunks {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * Links TileEntities to Blocks
+     * @param chunk The chunk object
+     */
+    private static void linkTileEntities(Chunk chunk) {
+        for (TileEntity tileEntity : chunk.getTileEntities()) {
+            int localX = tileEntity.getX() % 16;
+            int localZ = tileEntity.getZ() % 16;
+            if (localX < 0) localX += 16;
+            if (localZ < 0) localZ += 16;
+            chunk.getBlock(localX, tileEntity.getY(), localZ).ifPresent(block -> {
+                block.setTileEntity(tileEntity);
+            });
         }
     }
 

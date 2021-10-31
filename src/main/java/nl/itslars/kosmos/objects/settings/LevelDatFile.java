@@ -3,6 +3,7 @@ package nl.itslars.kosmos.objects.settings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.Getter;
+import nl.itslars.kosmos.enums.Difficulty;
 import nl.itslars.kosmos.enums.GameMode;
 import nl.itslars.kosmos.enums.GameRule;
 import nl.itslars.kosmos.enums.Generator;
@@ -92,6 +93,15 @@ public class LevelDatFile {
         if (!tagOptional.isPresent()) throw new IllegalArgumentException("The given GameRule is not in the level.dat");
 
         return tagOptional.get().getAsInt().getValue();
+    }
+
+    /**
+     * Returns whether the gamerule provided is set in dat file.
+     * @param gameRule The gamerule
+     * @return Boolean whether the gamerule is set
+     */
+    public boolean hasGameRule(GameRule gameRule) {
+        return parentCompoundTag.getByName(gameRule.getLevelDatName()).isPresent();
     }
 
     /**
@@ -225,6 +235,25 @@ public class LevelDatFile {
         if (!tagOptional.isPresent()) throw new IllegalArgumentException("FlatWorldLayers setting was not found in level.dat");
 
         return GSON.fromJson(tagOptional.get().getAsString().getValue(), FlatWorldLayers.class);
+    }
+
+    /**
+     * Sets the world's difficulty to the given value
+     * @param value The difficulty
+     */
+    public void setDifficulty(Difficulty value) {
+        parentCompoundTag.change("Difficulty", new IntTag("Difficulty", value.getId()));
+    }
+
+    /**
+     * Attempts to get the difficulty of the world. Throws an exception if the game mode setting was not found.
+     * @return The difficulty
+     */
+    public Difficulty getDifficulty() {
+        Optional<Tag> tagOptional = parentCompoundTag.getByName("Difficulty");
+        if (!tagOptional.isPresent()) throw new IllegalArgumentException("Difficulty setting was not found in level.dat");
+
+        return Difficulty.fromId(tagOptional.get().getAsInt().getValue());
     }
 
 }

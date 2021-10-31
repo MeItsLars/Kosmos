@@ -47,8 +47,9 @@ public class Chunk {
     /**
      * Retrieves the block that is at the given in-chunk coordinates. If the block didn't exist (because there was
      * no {@link SubChunk} there), an empty {@link Optional} is returned.
+     *
      * @param translatedX The translated X coordinate (the 'local' x coordinate, ranging from 0-15) of the block
-     * @param y The y coordinate of the block
+     * @param y           The y coordinate of the block
      * @param translatedZ The translated Z coordinate (the 'local' z coordinate, ranging from 0-15) of the block
      * @return An {@link Optional} containing the block if present, empty otherwise.
      */
@@ -66,10 +67,11 @@ public class Chunk {
     /**
      * Sets a block at the given in-chunk coordinates. If the block was successfully created, the block is returned.
      * If the block could not be created, an empty {@link Optional} is returned.
+     *
      * @param translatedX The translated X coordinate (the 'local' x coordinate, ranging from 0-15) of the block
-     * @param y The y coordinate of the block
+     * @param y           The y coordinate of the block
      * @param translatedZ The translated Z coordinate (the 'local' z coordinate, ranging from 0-15) of the block
-     * @param blockType The block type to place
+     * @param blockType   The block type to place
      * @return An {@link Optional} containing the resulting block if present, empty otherwise.
      */
     public Optional<Block> setBlock(int translatedX, int y, int translatedZ, BlockType blockType) {
@@ -79,10 +81,11 @@ public class Chunk {
     /**
      * Sets a block at the given in-chunk coordinates. If the block was successfully created, the block is returned.
      * If the block could not be created, an empty {@link Optional} is returned.
+     *
      * @param translatedX The translated X coordinate (the 'local' x coordinate, ranging from 0-15) of the block
-     * @param y The y coordinate of the block
+     * @param y           The y coordinate of the block
      * @param translatedZ The translated Z coordinate (the 'local' z coordinate, ranging from 0-15) of the block
-     * @param name The name of the block type to place
+     * @param name        The name of the block type to place
      * @return An {@link Optional} containing the resulting block if present, empty otherwise.
      */
     public Optional<Block> setBlock(int translatedX, int y, int translatedZ, String name) {
@@ -104,6 +107,7 @@ public class Chunk {
     /**
      * Make sure all chunks up to and including the desired chunk height are created.
      * The desired chunk height may be at most 15, because the world height limit is at 256 blocks.
+     *
      * @param desiredChunkHeight The desired chunk height
      */
     public void ensureChunkSpace(int desiredChunkHeight) {
@@ -117,6 +121,7 @@ public class Chunk {
 
     /**
      * Creates and initializes a new {@link SubChunk} for the current chunk
+     *
      * @param chunkY The height of the {@link SubChunk}
      * @return The newly create {@link SubChunk}
      */
@@ -154,6 +159,7 @@ public class Chunk {
 
     /**
      * Retrieves the X coordinate of this chunk
+     *
      * @return The X coordinate
      */
     public int getX() {
@@ -163,6 +169,7 @@ public class Chunk {
 
     /**
      * Retrieves the Z coordinate of this chunk
+     *
      * @return The Z coordinate
      */
     public int getZ() {
@@ -185,17 +192,31 @@ public class Chunk {
 
     /**
      * Unloads the current chunk from the cached chunk map in the {@link WorldData} chunk storage
+     *
      * @param save Whether the chunk should be saved before it is unloaded
      */
     public void unload(boolean save) {
-        if (save) save();
+        if (save) {
+            save();
+        }
 
         // Retrieve the (sub)map containing this chunk, and remove this chunk from that map
         Map<Integer, Chunk> zs = world.getCachedChunks().get(dimension).get(chunkX);
-        zs.remove(chunkZ);
-        // If the new map is empty, remove it entirely from the chunk map
-        if (zs.size() == 0) {
-            world.getCachedChunks().get(dimension).remove(chunkX);
+        // If chunk is deleted, zs might be null
+        if (zs != null) {
+            zs.remove(chunkZ);
+            // If the new map is empty, remove it entirely from the chunk map
+            if (zs.size() == 0) {
+                world.getCachedChunks().get(dimension).remove(chunkX);
+            }
         }
     }
+
+    /**
+     * Deletes the current chunk from the world
+     */
+    public void delete() {
+        world.deleteChunk(getDimension(), getChunkX(), getChunkZ());
+    }
+
 }
