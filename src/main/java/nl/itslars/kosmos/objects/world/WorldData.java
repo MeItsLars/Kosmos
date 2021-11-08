@@ -16,6 +16,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -52,10 +53,12 @@ public class WorldData implements Closeable {
     // The world's level.dat file data
     @Getter
     private final LevelDatFile levelDatFile;
+    private String name;
 
-    public WorldData(World world, File levelDat) {
+    public WorldData(World world, File levelDat, String name) {
         this.world = world;
         this.levelDatFile = new LevelDatFile(levelDat, (CompoundTag) NBTUtil.read(true, levelDat.toPath()));
+        this.name = name;
         // Initialize dimensions in the chunk maps
         Stream.of(Dimension.values()).forEach(dim -> {
             chunkPresets.put(dim, new HashMap<>());
@@ -84,6 +87,12 @@ public class WorldData implements Closeable {
         Files.delete(levelDatFile.getFile().toPath());
         // Serialize and save the level.dat file
         Files.write(levelDatFile.getFile().toPath(), NBTUtil.write(levelDatFile.getParentCompoundTag(), HeaderType.LEVEL_DAT));
+        if (name != null && !name.isEmpty()) {
+            // Delete the levelname.txt file, then save it
+            Path path = new File(levelDatFile.getFile().getParentFile(), "levelname.txt").toPath();
+            Files.deleteIfExists(path);
+            Files.write(path, name.getBytes());
+        }
     }
 
     /**
@@ -104,6 +113,18 @@ public class WorldData implements Closeable {
     public void close() throws IOException {
         unloadChunks();
         world.close();
+    }
+
+    /**
+     * Returns the name of the world from levelname.txt file or null if not found.
+     * @return the name of the world from levelname.txt file or null if not found
+     */
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**

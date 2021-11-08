@@ -41,13 +41,15 @@ public class World {
     private final File levelDat;
     // The WorldData object
     private WorldData worldData;
+    private final String name;
 
-    private World(File directory) throws IOException {
+    private World(File directory, String name) throws IOException {
         Options options = new Options();
         options.createIfMissing(true);
         // Load the LevelDB and level.dat file
         this.db = Iq80DBFactory.factory.open(new File(directory, "db"), options);
         this.levelDat = new File(directory, "level.dat");
+        this.name = name;
 
         // Load the world
         loadWorld();
@@ -60,7 +62,7 @@ public class World {
      * - Chunks
      */
     private void loadWorld() {
-        worldData = new WorldData(this, levelDat);
+        worldData = new WorldData(this, levelDat, name);
 
         DBIterator iterator = db.iterator();
         iterator.seekToFirst();
@@ -147,29 +149,23 @@ public class World {
         LevelDatFile levelDatFile = new LevelDatFile(levelDat, (CompoundTag) NBTUtil.read(true, levelDat.toPath()));
 
         // Backup world
+        String name = null;
+        File worldNameFile = new File(directory, "levelname.txt");
+        if (worldNameFile.exists()) {
+            name = Files.readFirstLine(worldNameFile, Charset.defaultCharset());
+        }
         if (backupDirectory != null) {
             if (!backupDirectory.exists()) {
                 throw new IllegalArgumentException("The provided backup directory does not exist!");
             }
-            // Try getting the world name from levelname.txt file and if it fails, use the one from the level.dat file
-            String levelName = levelDatFile.getLevelName();
-            File worldNameFile = new File(directory, "levelname.txt");
-            if (worldNameFile.exists()) {
-                String name = Files.readFirstLine(worldNameFile, Charset.defaultCharset());
-                if (name != null && !name.isEmpty()) {
-                    levelName = name;
-                }
-            }
-            // if all fails, use directory name
-            if (levelName == null || levelName.isEmpty()) {
-                levelName = directory.getName();
-            }
+            // Try getting the world name from levelname.txt file and if it fails, use the one from the level.dat file. If both fail, use the directory name
+            String levelName = name != null && !name.isEmpty() ? name : levelDatFile.getLevelName() != null && !levelDatFile.getLevelName().isEmpty() ? levelDatFile.getLevelName() : directory.getName();
             File backupFile = new File(backupDirectory, levelName + "_" + directory.getName() + "_" + DATE_FORMAT.format(Date.from(Instant.now())));
             backupFile.mkdir();
             FileUtils.copyDirectoryContents(directory, backupFile);
         }
 
         // Initiate and return a new World (and WorldData) object
-        return new World(directory).getWorldData();
+        return new World(directory, name).getWorldData();
     }
 }
