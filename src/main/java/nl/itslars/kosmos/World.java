@@ -3,6 +3,7 @@ package nl.itslars.kosmos;
 import lombok.Getter;
 import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.objects.entity.Player;
+import nl.itslars.kosmos.objects.settings.LevelDatFile;
 import nl.itslars.kosmos.objects.world.ChunkPreset;
 import nl.itslars.kosmos.objects.world.WorldData;
 import nl.itslars.mcpenbt.NBTUtil;
@@ -138,18 +139,31 @@ public class World {
      * @throws IOException When opening the world failed
      */
     public static WorldData open(File directory, File backupDirectory) throws IOException {
-        // Check if the directory was a proper world directory, based on the levelname.txt file
-        File worldName = new File(directory, "levelname.txt");
-        if (!worldName.exists()) {
+        // Check if the directory was a proper world directory, based on the level.dat file
+        File levelDat = new File(directory, "level.dat");
+        if (!levelDat.exists()) {
             throw new IllegalArgumentException("Invalid world directory.");
         }
+        LevelDatFile levelDatFile = new LevelDatFile(levelDat, (CompoundTag) NBTUtil.read(true, levelDat.toPath()));
 
         // Backup world
         if (backupDirectory != null) {
             if (!backupDirectory.exists()) {
                 throw new IllegalArgumentException("The provided backup directory does not exist!");
             }
-            String levelName = Files.readFirstLine(worldName, Charset.defaultCharset());
+            // Try getting the world name from levelname.txt file and if it fails, use the one from the level.dat file
+            String levelName = levelDatFile.getLevelName();
+            File worldNameFile = new File(directory, "levelname.txt");
+            if (worldNameFile.exists()) {
+                String name = Files.readFirstLine(worldNameFile, Charset.defaultCharset());
+                if (name != null && !name.isEmpty()) {
+                    levelName = name;
+                }
+            }
+            // if all fails, use directory name
+            if (levelName == null || levelName.isEmpty()) {
+                levelName = directory.getName();
+            }
             File backupFile = new File(backupDirectory, levelName + "_" + directory.getName() + "_" + DATE_FORMAT.format(Date.from(Instant.now())));
             backupFile.mkdir();
             FileUtils.copyDirectoryContents(directory, backupFile);

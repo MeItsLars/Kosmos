@@ -162,6 +162,25 @@ public class LevelDatFile {
     }
 
     /**
+     * Sets the world's name to the given value
+     * @param value The level name
+     */
+    public void setLevelName(String value) {
+        parentCompoundTag.change("LevelName", new StringTag("LevelName", value));
+    }
+
+    /**
+     * Attempts to get the name of the world. Throws an exception if the level name was not found.
+     * @return The level name
+     */
+    public String getLevelName() {
+        Optional<Tag> tagOptional = parentCompoundTag.getByName("LevelName");
+        if (!tagOptional.isPresent()) throw new IllegalArgumentException("LevelName setting was not found in level.dat");
+
+        return tagOptional.get().getAsString().getValue();
+    }
+
+    /**
      * Sets the world's spawn x coordinate to the given value
      * @param value The spawn x coordinate
      */
