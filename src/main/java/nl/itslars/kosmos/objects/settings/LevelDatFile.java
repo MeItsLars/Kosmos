@@ -38,6 +38,20 @@ public class LevelDatFile {
     }
 
     /**
+     * Removes version specific tags from the level.dat file.
+     *
+     * Currently, removes :
+     * - "MinimumCompatibleClientVersion"
+     * - "InventoryVersion"
+     * - "lastOpenedWithVersion"
+     */
+    public void removeVersionTags() {
+        parentCompoundTag.remove("MinimumCompatibleClientVersion");
+        parentCompoundTag.remove("InventoryVersion");
+        parentCompoundTag.remove("lastOpenedWithVersion");
+    }
+
+    /**
      * Sets a gamerule to a certain boolean value. If the provided gamerule is not a byte gamerule, an exception is thrown.
      * @param gameRule The gamerule
      * @param value The (boolean) value
