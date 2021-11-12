@@ -54,20 +54,17 @@ public class Chunks {
 
     /**
      * Loads a chunk from the given preset from the LevelDB storage
-     * @param db The LevelDB storage
      * @param preset The chunk preset
      * @return The newly loaded chunks
      */
-    public static Chunk loadChunk(DB db, ChunkPreset preset) {
+    public static Chunk loadChunk(ChunkPreset preset) {
         // Create a new chunk instance
-        Chunk chunk = new Chunk(preset.getWorld(), preset.getX(), preset.getZ(), preset.getDimension());
-        // Load all types of chunk data into the chunk object
-        loadChunkData2D(db, chunk);
-        loadChunkEntities(db, chunk);
-        loadChunkTileEntities(db, chunk);
-        loadChunkSubChunks(db, chunk);
-        linkTileEntities(chunk);
-        return chunk;
+        return new Chunk(preset.getWorld(), preset.getX(), preset.getZ(), preset.getDimension(),
+                (db, chunk) -> {
+            loadChunkTileEntities(db, chunk);
+            loadChunkSubChunks(db, chunk);
+            linkTileEntities(chunk);
+        }, Chunks::loadChunkEntities, Chunks::loadChunkData2D);
     }
 
     /**
@@ -283,12 +280,21 @@ public class Chunks {
      * Saves the given chunk to the LevelDB storage
      * @param db The LevelDB storage
      * @param chunk The chunk object
+     * @param terrainLoaded whether the terrain was loaded and should be saved
+     * @param entitiesLoaded whether the entities were loaded and should be saved
+     * @param data2DLoaded whether the data2D was loaded and should be saved
      */
-    public static void saveChunk(DB db, Chunk chunk) {
-        saveChunkData2D(db, chunk);
-        saveChunkTileEntities(db, chunk);
-        saveChunkEntities(db, chunk);
-        saveChunkSubChunks(db, chunk);
+    public static void saveChunk(DB db, Chunk chunk, boolean terrainLoaded, boolean entitiesLoaded, boolean data2DLoaded) {
+        if (data2DLoaded) {
+            saveChunkData2D(db, chunk);
+        }
+        if (terrainLoaded) {
+            saveChunkTileEntities(db, chunk);
+            saveChunkSubChunks(db, chunk);
+        }
+        if (entitiesLoaded) {
+            saveChunkEntities(db, chunk);
+        }
     }
 
     /**

@@ -1,14 +1,15 @@
 package nl.itslars.kosmos.objects.world;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import nl.itslars.kosmos.enums.BlockType;
 import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.objects.entity.Entity;
 import nl.itslars.kosmos.objects.entity.TileEntity;
 import nl.itslars.kosmos.util.Chunks;
+import org.iq80.leveldb.DB;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
 
 /**
@@ -17,7 +18,6 @@ import java.util.function.UnaryOperator;
  * objects, that are stored inside of this class. The class contains chunk information like elevation, biomes
  * entities, tile entities, and of course all blocks.
  */
-@Getter
 @RequiredArgsConstructor
 public class Chunk {
 
@@ -29,6 +29,16 @@ public class Chunk {
     private final int chunkZ;
     // The chunk dimension
     private final Dimension dimension;
+    // Terrain loader
+    private final BiConsumer<DB, Chunk> terrainLoader;
+    // Entity loader
+    private final BiConsumer<DB, Chunk> entitiesLoader;
+    // Data 2D loader
+    private final BiConsumer<DB, Chunk> data2DLoader;
+
+    private boolean terrainLoaded = false;
+    private boolean entitiesLoaded = false;
+    private boolean data2DLoaded = false;
 
     // The 2d elevation map, that contains the maximum height of each x/z combination, plus 1.
     // TODO: When a chunk has been changed, the elevation should be updated. This is not currently done yet.
@@ -45,6 +55,45 @@ public class Chunk {
     private final Map<Short, SubChunk> subChunks = new HashMap<>();
 
     /**
+     * Make sure the terrain is loaded before accessing it.
+     */
+    private void ensureTerrainLoaded() {
+        if (terrainLoaded) {
+            return;
+        }
+        // Mark as loaded before executing the loader to avoid stack overflow error.
+        terrainLoaded = true;
+        // Load the terrain
+        terrainLoader.accept(world.getWorld().getDb(), this);
+    }
+
+    /**
+     * Make sure the entities are loaded before accessing it.
+     */
+    private void ensureEntitiesLoaded() {
+        if (entitiesLoaded) {
+            return;
+        }
+        // Mark as loaded before executing the loader to avoid stack overflow error.
+        entitiesLoaded = true;
+        // Load the entities
+        entitiesLoader.accept(world.getWorld().getDb(), this);
+    }
+
+    /**
+     * Make sure the 2D data is loaded before accessing it.
+     */
+    private void ensureData2DLoaded() {
+        if (data2DLoaded) {
+            return;
+        }
+        // Mark as loaded before executing the loader to avoid stack overflow error.
+        data2DLoaded = true;
+        // Load the 2D data
+        data2DLoader.accept(world.getWorld().getDb(), this);
+    }
+
+    /**
      * Retrieves the block that is at the given in-chunk coordinates. If the block didn't exist (because there was
      * no {@link SubChunk} there), an empty {@link Optional} is returned.
      *
@@ -54,6 +103,7 @@ public class Chunk {
      * @return An {@link Optional} containing the block if present, empty otherwise.
      */
     public Optional<Block> getBlock(int translatedX, int y, int translatedZ) {
+        ensureTerrainLoaded();
         // Get the SubChunk Y
         short chunkY = (short) (y >> 4);
         // If the SubChunk is not present, return an empty optional
@@ -89,6 +139,7 @@ public class Chunk {
      * @return An {@link Optional} containing the resulting block if present, empty otherwise.
      */
     public Optional<Block> setBlock(int translatedX, int y, int translatedZ, String name) {
+        ensureTerrainLoaded();
         // Get the SubChunk Y
         short chunkY = (short) (y >> 4);
         // Make sure all chunks up to and including chunkY are created
@@ -111,6 +162,7 @@ public class Chunk {
      * @param desiredChunkHeight The desired chunk height
      */
     public void ensureChunkSpace(int desiredChunkHeight) {
+        ensureTerrainLoaded();
         // Loop through all chunk heights. If the SubChunk did not yet exist, create a new SubChunk
         for (short currentY = 0; currentY <= Math.min(desiredChunkHeight, 15); currentY++) {
             if (!subChunks.containsKey(currentY)) {
@@ -145,6 +197,7 @@ public class Chunk {
      * @param function The function, returns the new block position
      */
     public void forEachBlock(UnaryOperator<Block> function) {
+        ensureTerrainLoaded();
         for (SubChunk subChunk : subChunks.values()) {
             Block[][][] blocks = subChunk.getBlocks();
             for (int x = 0; x < 16; x++) {
@@ -180,7 +233,7 @@ public class Chunk {
      * Saves the chunk to the Minecraft Bedrock LevelDB storage
      */
     public void save() {
-        Chunks.saveChunk(world.getWorld().getDb(), this);
+        Chunks.saveChunk(world.getWorld().getDb(), this, terrainLoaded, entitiesLoaded, data2DLoaded);
     }
 
     /**
@@ -219,4 +272,44 @@ public class Chunk {
         world.deleteChunk(getDimension(), getChunkX(), getChunkZ());
     }
 
+    public WorldData getWorld() {
+        return this.world;
+    }
+
+    public int getChunkX() {
+        return this.chunkX;
+    }
+
+    public int getChunkZ() {
+        return this.chunkZ;
+    }
+
+    public Dimension getDimension() {
+        return this.dimension;
+    }
+
+    public short[][] getElevation() {
+        ensureData2DLoaded();
+        return this.elevation;
+    }
+
+    public byte[][] getBiomes() {
+        ensureData2DLoaded();
+        return this.biomes;
+    }
+
+    public Set<Entity> getEntities() {
+        ensureEntitiesLoaded();
+        return this.entities;
+    }
+
+    public Set<TileEntity> getTileEntities() {
+        ensureTerrainLoaded();
+        return this.tileEntities;
+    }
+
+    public Map<Short, SubChunk> getSubChunks() {
+        ensureTerrainLoaded();
+        return this.subChunks;
+    }
 }
