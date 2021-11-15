@@ -214,7 +214,9 @@ public class Chunk {
      * Retrieves the X coordinate of this chunk
      *
      * @return The X coordinate
+     * @deprecated Use {@link #getChunkX()} instead
      */
+    @Deprecated
     public int getX() {
         return chunkX;
     }
@@ -224,7 +226,9 @@ public class Chunk {
      * Retrieves the Z coordinate of this chunk
      *
      * @return The Z coordinate
+     * @deprecated Use {@link #getChunkZ()} instead
      */
+    @Deprecated
     public int getZ() {
         return chunkZ;
     }
