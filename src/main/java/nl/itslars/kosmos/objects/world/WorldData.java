@@ -804,7 +804,7 @@ public class WorldData implements Closeable {
      */
     public void deleteChunk(Dimension dimension, int chunkX, int chunkZ) {
         // If chunk is not generated, we don't have to remove it
-        if (!isGenerated(dimension, chunkZ, chunkX)) {
+        if (!isGenerated(dimension, chunkX, chunkZ)) {
             return;
         }
         // Remove chunk preset
@@ -816,7 +816,7 @@ public class WorldData implements Closeable {
         // Add all chunk related keys to deletionKeys
         deletionKeys.addAll(Chunks.getDeletionKeys(chunkPreset));
         // If chunk was already cached, we also need to remove the cache
-        if (isCached(dimension, chunkZ, chunkX)) {
+        if (isCached(dimension, chunkX, chunkZ)) {
             cachedChunks.get(dimension).get(chunkX).remove(chunkZ);
             // If the new map is empty, remove it entirely from the chunk map
             if (cachedChunks.get(dimension).get(chunkX).isEmpty()) {
