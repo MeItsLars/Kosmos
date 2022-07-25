@@ -93,7 +93,7 @@ public class World {
                     byte[] pointer = tag.getAsString().getValue().getBytes();
                     worldData.addPlayerPointer(key, pointer);
                 });
-            } else if (keyName.matches("^[a-zA-Z]*$") || keyName.startsWith("map_")) {
+            } else if (keyName.matches("^[a-zA-Z]*$") || keyName.startsWith("map_") || keyName.startsWith("digp")) {
                 // Check if the key represents a data attribute and if so, ignore it
                 // This check can NOT be removed, otherwise the next chunk load may trigger an exception
             } else if (key.length >= 8 && key.length <= 14) {
