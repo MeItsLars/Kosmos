@@ -17,6 +17,16 @@ public class Abilities {
     private final CompoundTag parentCompoundTag;
 
     /**
+     * Returns whether the ability is present or not
+     *
+     * @param ability The ability
+     * @return whether the ability is present or not
+     */
+    public boolean hasAbility(Ability ability) {
+        return parentCompoundTag.getByName(ability.getName()).isPresent();
+    }
+
+    /**
      * Sets a boolean ability in the abilities. Throws an exception if the ability is not a byte ability
      * @param ability The ability
      * @param value The (boolean) value

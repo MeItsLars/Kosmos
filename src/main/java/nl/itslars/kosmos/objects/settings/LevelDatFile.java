@@ -38,6 +38,20 @@ public class LevelDatFile {
     }
 
     /**
+     * Removes version specific tags from the level.dat file.
+     *
+     * Currently, removes :
+     * - "MinimumCompatibleClientVersion"
+     * - "InventoryVersion"
+     * - "lastOpenedWithVersion"
+     */
+    public void removeVersionTags() {
+        parentCompoundTag.remove("MinimumCompatibleClientVersion");
+        parentCompoundTag.remove("InventoryVersion");
+        parentCompoundTag.remove("lastOpenedWithVersion");
+    }
+
+    /**
      * Sets a gamerule to a certain boolean value. If the provided gamerule is not a byte gamerule, an exception is thrown.
      * @param gameRule The gamerule
      * @param value The (boolean) value
@@ -159,6 +173,25 @@ public class LevelDatFile {
         if (!tagOptional.isPresent()) throw new IllegalArgumentException("GameType setting was not found in level.dat");
 
         return GameMode.fromId(tagOptional.get().getAsInt().getValue());
+    }
+
+    /**
+     * Sets the world's name to the given value
+     * @param value The level name
+     */
+    public void setLevelName(String value) {
+        parentCompoundTag.change("LevelName", new StringTag("LevelName", value));
+    }
+
+    /**
+     * Attempts to get the name of the world. Throws an exception if the level name was not found.
+     * @return The level name
+     */
+    public String getLevelName() {
+        Optional<Tag> tagOptional = parentCompoundTag.getByName("LevelName");
+        if (!tagOptional.isPresent()) throw new IllegalArgumentException("LevelName setting was not found in level.dat");
+
+        return tagOptional.get().getAsString().getValue();
     }
 
     /**
