@@ -1,6 +1,7 @@
 package nl.itslars.kosmos.util;
 
 import lombok.SneakyThrows;
+import nl.itslars.kosmos.LevelDB;
 import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.objects.entity.Entity;
 import nl.itslars.kosmos.objects.entity.TileEntity;
@@ -12,7 +13,6 @@ import nl.itslars.mcpenbt.NBTUtil;
 import nl.itslars.mcpenbt.tags.CompoundTag;
 import nl.itslars.mcpenbt.tags.Tag;
 import org.apache.commons.compress.utils.BitInputStream;
-import org.iq80.leveldb.DB;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -72,12 +72,25 @@ public class Chunks {
      * @param db The LevelDB storage
      * @param preset The chunk object
      */
-    private static void loadChunkData2D(DB db, Chunk preset) {
+    private static void loadChunkData2D(LevelDB db, Chunk preset) {
         // Generate the level DB key
         byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 45, (byte) 0);
-        byte[] value = db.get(levelDBKey);
-        // Sometimes when chunk is generated completely empty, it doesn't have data on terrain
-        if (value == null) return;
+        boolean oldFormat = db.has(levelDBKey);
+        byte[] value = null;
+        // Check for new format
+        if (oldFormat) {
+            value = db.get(levelDBKey);
+        }
+        else {
+            levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 43, (byte) 0);
+            if (db.has(levelDBKey)) {
+                value = db.get(levelDBKey);
+            }
+        }
+        // When both are absent, skip the loading
+        if (value == null) {
+            return;
+        }
 
         // Loop through the 2d chunk, and set the chunk's elevation and biomes accordingly
         for (int z = 0; z < 16; z++) {
@@ -85,7 +98,13 @@ public class Chunks {
                 int elevationIndex = 2 * (x + z * 16);
                 int biomeIndex = 512 + x + z * 16;
                 preset.getElevation()[x][z] = (short) (value[elevationIndex + 1] << 8 | value[elevationIndex] & 0xFF);
-                preset.getBiomes()[x][z] = value[biomeIndex];
+                // In new format, the elevation is stored as absolute value, so we need to offset it to get an actual Y value
+                // TODO: Implement loading biomes in new format
+                if (!oldFormat) {
+                    preset.getElevation()[x][z] -= 64;
+                } else {
+                    preset.getBiomes()[x][z] = value[biomeIndex];
+                }
             }
         }
     }
@@ -96,14 +115,14 @@ public class Chunks {
      * @param preset The chunk object
      */
     @SneakyThrows
-    private static void loadChunkTileEntities(DB db, Chunk preset) {
+    private static void loadChunkTileEntities(LevelDB db, Chunk preset) {
         // Generate the level DB key
         byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 49, (byte) 0);
-        byte[] value = db.get(levelDBKey);
         // Return if no tile entities exist for this chunk
-        if (value == null) {
+        if (!db.has(levelDBKey)) {
             return;
         }
+        byte[] value = db.get(levelDBKey);
 
         // Loop through and parse all tile entities that the value array contains.
         InputStream stream = new ByteArrayInputStream(value);
@@ -119,14 +138,14 @@ public class Chunks {
      * @param preset The chunk object
      */
     @SneakyThrows
-    private static void loadChunkEntities(DB db, Chunk preset) {
+    private static void loadChunkEntities(LevelDB db, Chunk preset) {
         // Generate the level DB key
         byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 50, (byte) 0);
-        byte[] value = db.get(levelDBKey);
         // Return if no entities exist for this chunk
-        if (value == null) {
+        if (!db.has(levelDBKey)) {
             return;
         }
+        byte[] value = db.get(levelDBKey);
 
         // Loop through and parse all entities that the value array contains.
         InputStream stream = new ByteArrayInputStream(value);
@@ -143,17 +162,17 @@ public class Chunks {
      * @param db The LevelDB storage
      * @param preset The chunk object
      */
-    private static void loadChunkSubChunks(DB db, Chunk preset) {
+    private static void loadChunkSubChunks(LevelDB db, Chunk preset) {
         // Loop through all possible subchunks
-        for (byte subChunkHeight = 0; subChunkHeight < 16; subChunkHeight++) {
+        for (byte subChunkHeight = -4; subChunkHeight < 16; subChunkHeight++) {
             // Generate the level DB key
             byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 47, subChunkHeight);
-            byte[] value = db.get(levelDBKey);
 
             // If the value didn't exist, the top subchunk is reached, and we can stop.
-            if (value == null) {
+            if (!db.has(levelDBKey)) {
                 continue;
             }
+            byte[] value = db.get(levelDBKey);
 
             // Create a new InputStream, containing the value data
             try (InputStream inputStream = new ByteArrayInputStream(value)) {
@@ -284,7 +303,7 @@ public class Chunks {
      * @param entitiesLoaded whether the entities were loaded and should be saved
      * @param data2DLoaded whether the data2D was loaded and should be saved
      */
-    public static void saveChunk(DB db, Chunk chunk, boolean terrainLoaded, boolean entitiesLoaded, boolean data2DLoaded) {
+    public static void saveChunk(LevelDB db, Chunk chunk, boolean terrainLoaded, boolean entitiesLoaded, boolean data2DLoaded) {
         if (data2DLoaded) {
             saveChunkData2D(db, chunk);
         }
@@ -302,7 +321,7 @@ public class Chunks {
      * @param db The LevelDB storage
      * @param chunk The chunk object
      */
-    private static void saveChunkData2D(DB db, Chunk chunk) {
+    private static void saveChunkData2D(LevelDB db, Chunk chunk) {
         // Generate the level DB key
         byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), (byte) 45, (byte) 0);
         byte[] value = new byte[768];
@@ -329,7 +348,7 @@ public class Chunks {
      * @param chunk The chunk object
      */
     @SneakyThrows
-    private static void saveChunkTileEntities(DB db, Chunk chunk) {
+    private static void saveChunkTileEntities(LevelDB db, Chunk chunk) {
         // Generate the level DB key
         byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), (byte) 49, (byte) 0);
 
@@ -350,7 +369,7 @@ public class Chunks {
      * @param chunk The chunk object
      */
     @SneakyThrows
-    private static void saveChunkEntities(DB db, Chunk chunk) {
+    private static void saveChunkEntities(LevelDB db, Chunk chunk) {
         // Generate the level DB key
         byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), (byte) 50, (byte) 0);
 
@@ -373,7 +392,7 @@ public class Chunks {
      * @param chunk The chunk object
      */
     @SneakyThrows
-    private static void saveChunkSubChunks(DB db, Chunk chunk) {
+    private static void saveChunkSubChunks(LevelDB db, Chunk chunk) {
         // Loop through all stored subchunks
         chunk.getSubChunks().forEach((subChunkHeight, deserializedSubChunk) -> {
             SerializedSubChunk subChunk = deserializedSubChunk.serialize();

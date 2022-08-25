@@ -31,11 +31,19 @@
             <version>1.21</version>
         </dependency>
 
-        <!-- LevelDB -->
+        <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
         <dependency>
-            <groupId>com.github.MeItsLars</groupId>
-            <artifactId>LevelDB-MCPE</artifactId>
-            <version>1.0.2</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>31.1-jre</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>4.5.1</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- MCPE NBT API -->

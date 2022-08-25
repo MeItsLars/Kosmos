@@ -1,12 +1,12 @@
 package nl.itslars.kosmos.objects.world;
 
 import lombok.RequiredArgsConstructor;
+import nl.itslars.kosmos.LevelDB;
 import nl.itslars.kosmos.enums.BlockType;
 import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.objects.entity.Entity;
 import nl.itslars.kosmos.objects.entity.TileEntity;
 import nl.itslars.kosmos.util.Chunks;
-import org.iq80.leveldb.DB;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -30,11 +30,11 @@ public class Chunk {
     // The chunk dimension
     private final Dimension dimension;
     // Terrain loader
-    private final BiConsumer<DB, Chunk> terrainLoader;
+    private final BiConsumer<LevelDB, Chunk> terrainLoader;
     // Entity loader
-    private final BiConsumer<DB, Chunk> entitiesLoader;
+    private final BiConsumer<LevelDB, Chunk> entitiesLoader;
     // Data 2D loader
-    private final BiConsumer<DB, Chunk> data2DLoader;
+    private final BiConsumer<LevelDB, Chunk> data2DLoader;
 
     private boolean terrainLoaded = false;
     private boolean entitiesLoaded = false;

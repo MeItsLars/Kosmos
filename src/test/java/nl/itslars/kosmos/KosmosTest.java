@@ -6,7 +6,7 @@ import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.enums.GameRule;
 import nl.itslars.kosmos.objects.world.Block;
 import nl.itslars.kosmos.objects.world.WorldData;
-import org.iq80.leveldb.util.FileUtils;
+import nl.itslars.kosmos.util.FileUtils;
 import org.junit.jupiter.api.*;
 
 import java.io.File;
