@@ -41,6 +41,7 @@ public class World {
     private World(File directory, String name) throws IOException {
         LevelDB.Options options = LevelDB.createOptions();
         options.setCompression(LevelDB.CompressionType.RAW_ZLIB.getId());
+        options.setBlockSize(4194304);
         // Load the LevelDB and level.dat file
         this.db = LevelDB.open(new File(directory, "db").getAbsolutePath(), options);
         this.levelDat = new File(directory, "level.dat");

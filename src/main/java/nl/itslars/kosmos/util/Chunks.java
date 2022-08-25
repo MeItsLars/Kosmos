@@ -38,17 +38,16 @@ public class Chunks {
     public static List<byte[]> getDeletionKeys(ChunkPreset preset) {
         ArrayList<byte[]> result = new ArrayList<>();
         // Remove ALL keys related to the chunk (along with legacy ones)
-        for (int i = 44; i <= 59; i++) {
-            if (i != 47) {
-                result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) i, (byte) 0));
+        for (LevelChunkTag value : LevelChunkTag.values()) {
+            if (value != LevelChunkTag.SubChunkPrefix) {
+                result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), value));
             } else {
                 // SubChunks
                 for (byte subChunkHeight = 0; subChunkHeight < 16; subChunkHeight++) {
-                    result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 47, subChunkHeight));
+                    result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), value, subChunkHeight));
                 }
             }
         }
-        result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 118, (byte) 0));
         return result;
     }
 
@@ -481,6 +480,31 @@ public class Chunks {
         for (CompoundTag block : palette) {
             outputStream.write(NBTUtil.write(block));
         }
+    }
+
+    /**
+     * Generates a LevelDB key for the given parameters
+     * @param chunkX The chunk X
+     * @param chunkZ The chunk Z
+     * @param dimension The chunk dimension
+     * @param tag The type of record for the LevelDB accessor
+     * @return The LevelDB key (byte[])
+     */
+    public static byte[] generateLevelDBKey(int chunkX, int chunkZ, Dimension dimension, LevelChunkTag tag) {
+        return generateLevelDBKey(chunkX, chunkZ, dimension, tag.getId(), (byte) 0);
+    }
+
+    /**
+     * Generates a LevelDB key for the given parameters
+     * @param chunkX The chunk X
+     * @param chunkZ The chunk Z
+     * @param dimension The chunk dimension
+     * @param tag The type of record for the LevelDB accessor
+     * @param subChunkIndex The optional SubChunk height index. Set to '0' if the 'recordType' is not SubChunkPrefix
+     * @return The LevelDB key (byte[])
+     */
+    public static byte[] generateLevelDBKey(int chunkX, int chunkZ, Dimension dimension, LevelChunkTag tag, byte subChunkIndex) {
+        return generateLevelDBKey(chunkX, chunkZ, dimension, tag.getId(), subChunkIndex);
     }
 
     /**

@@ -40,6 +40,14 @@ public class LevelDB {
         checkError();
     }
 
+    public void shrink() {
+        if (id == -1) {
+            return;
+        }
+        GoLevelDB.leveldb_shrink(id);
+        checkError();
+    }
+
     public void compact() {
         if (id == -1) {
             throw new IllegalStateException("Database is closed");
@@ -52,10 +60,14 @@ public class LevelDB {
         if (id == -1) {
             throw new IllegalStateException("Database is closed");
         }
-        Memory keyMem = new Memory(key.length);
-        keyMem.write(0, key, 0, key.length);
-        Memory valueMem = new Memory(value.length);
-        valueMem.write(0, value, 0, value.length);
+        Memory keyMem = new Memory(Math.max(key.length, 1));
+        if (key.length > 0) {
+            keyMem.write(0, key, 0, key.length);
+        }
+        Memory valueMem = new Memory(Math.max(value.length, 1));
+        if (value.length > 0) {
+            valueMem.write(0, value, 0, value.length);
+        }
         GoLevelDB.leveldb_put(id, keyMem, key.length, valueMem, value.length);
         checkError();
     }
@@ -148,6 +160,14 @@ public class LevelDB {
                 throw new IllegalStateException("Options are closed");
             }
             GoLevelDB.leveldb_options_set_compression(id, compression);
+            checkError();
+        }
+
+        public void setBlockSize(int blockSize) {
+            if (id == -1) {
+                throw new IllegalStateException("Options are closed");
+            }
+            GoLevelDB.leveldb_options_set_block_size(id, blockSize);
             checkError();
         }
 

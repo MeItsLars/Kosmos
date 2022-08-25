@@ -43,6 +43,29 @@ func AllocatePointer(ptr interface{}) C.int {
 func main() {
 }
 
+//export leveldb_shrink
+func leveldb_shrink(id C.int) {
+	// This method is not yet fully implemented.
+	db := GetPointer(id).(*leveldb.DB)
+	newIterator := db.NewIterator(nil, nil)
+	for newIterator.Next() {
+		err := db.Put(newIterator.Key(), newIterator.Value(), nil)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if newIterator.Error() != nil {
+		lastError = newIterator.Error()
+		return
+	}
+	newIterator.Release()
+	err := db.CompactRange(util.Range{})
+	if err != nil {
+		lastError = err
+		return
+	}
+}
+
 //export leveldb_free
 func leveldb_free(ptr unsafe.Pointer) {
 	C.free(ptr)
@@ -73,6 +96,12 @@ func leveldb_options_destroy(id C.int) {
 func leveldb_options_set_compression(id C.int, compression C.uint) {
 	options := GetPointer(id).(opt.Options)
 	options.Compression = opt.Compression(uint(compression))
+}
+
+//export leveldb_options_set_block_size
+func leveldb_options_set_block_size(id C.int, compression C.int) {
+	options := GetPointer(id).(opt.Options)
+	options.BlockSize = int(compression)
 }
 
 //export leveldb_open
