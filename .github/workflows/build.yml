@@ -44,7 +44,7 @@ jobs:
           servers: >
             [
               {
-                "id": "stirante-snapshots",
+                "id": "nexus-snapshots",
                 "username": "admin",
                 "password": "${env.NEXUS_PASSWORD}"
               }
