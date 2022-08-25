@@ -35,5 +35,6 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 
 # Compiled binaries
-
 src/main/resources/win32-x86-64
+src/main/resources/darwin-x86-64
+src/main/resources/linux-x86-64
