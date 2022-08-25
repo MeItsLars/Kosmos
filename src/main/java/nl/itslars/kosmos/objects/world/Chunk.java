@@ -1,7 +1,7 @@
 package nl.itslars.kosmos.objects.world;
 
 import lombok.RequiredArgsConstructor;
-import nl.itslars.kosmos.LevelDB;
+import nl.itslars.kosmos.leveldb.LevelDB;
 import nl.itslars.kosmos.enums.BlockType;
 import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.objects.entity.Entity;

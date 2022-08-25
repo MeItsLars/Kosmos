@@ -1,4 +1,4 @@
-package nl.itslars.kosmos;
+package nl.itslars.kosmos.leveldb;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;

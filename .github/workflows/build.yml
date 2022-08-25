@@ -24,7 +24,7 @@ jobs:
         run: |
           go mod vendor
         shell: bash
-      - name: Build
+      - name: Build Goleveldb proxy
         working-directory: ./goleveldb
         run: |
           ./build.sh
@@ -45,6 +45,11 @@ jobs:
             [
               {
                 "id": "nexus-snapshots",
+                "username": "admin",
+                "password": "${{secrets.NEXUS_PASSWORD}}"
+              },
+              {
+                "id": "nexus-releases",
                 "username": "admin",
                 "password": "${{secrets.NEXUS_PASSWORD}}"
               }

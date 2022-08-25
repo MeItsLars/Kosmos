@@ -1,10 +1,8 @@
-package nl.itslars.kosmos;
+package nl.itslars.kosmos.leveldb;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
-
-import java.util.Arrays;
 
 public class LevelDB {
 

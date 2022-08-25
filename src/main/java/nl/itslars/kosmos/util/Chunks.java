@@ -1,7 +1,7 @@
 package nl.itslars.kosmos.util;
 
 import lombok.SneakyThrows;
-import nl.itslars.kosmos.LevelDB;
+import nl.itslars.kosmos.leveldb.LevelDB;
 import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.objects.entity.Entity;
 import nl.itslars.kosmos.objects.entity.TileEntity;
