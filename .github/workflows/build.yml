@@ -7,7 +7,9 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
+    container:
+      image: neilotoole/xcgo:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -17,8 +19,6 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: Set up Zig
-        uses: goto-bus-stop/setup-zig@v1
       - name: Sync vendor directory
         working-directory: ./goleveldb
         run: |
