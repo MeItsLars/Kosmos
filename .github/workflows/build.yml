@@ -49,6 +49,6 @@ jobs:
                 "password": "${env.NEXUS_PASSWORD}"
               }
             ]
-          output_file: .m2/settings.xml
+          output_file: maven/settings.xml
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots deploy
+        run: mvn --settings maven/settings.xml --batch-mode --update-snapshots deploy
