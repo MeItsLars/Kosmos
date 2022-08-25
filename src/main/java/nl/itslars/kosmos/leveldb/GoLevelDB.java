@@ -17,6 +17,7 @@ public class GoLevelDB {
     public static native void leveldb_options_set_compression(int options, int compression);
     public static native int leveldb_open(String path, int options);
     public static native void leveldb_close(int db);
+    public static native void leveldb_compact(int db);
     public static native int leveldb_iterator_create(int iterator);
     public static native void leveldb_iterator_destroy(int iterator);
     public static native int leveldb_iterator_next(int iterator);

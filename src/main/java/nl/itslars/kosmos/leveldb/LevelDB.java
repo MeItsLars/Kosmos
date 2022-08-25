@@ -32,12 +32,26 @@ public class LevelDB {
     }
 
     public void close() {
+        if (id == -1) {
+            return;
+        }
         GoLevelDB.leveldb_close(id);
         id = -1;
         checkError();
     }
 
+    public void compact() {
+        if (id == -1) {
+            throw new IllegalStateException("Database is closed");
+        }
+        GoLevelDB.leveldb_compact(id);
+        checkError();
+    }
+
     public void put(byte[] key, byte[] value) {
+        if (id == -1) {
+            throw new IllegalStateException("Database is closed");
+        }
         Memory keyMem = new Memory(key.length);
         keyMem.write(0, key, 0, key.length);
         Memory valueMem = new Memory(value.length);
@@ -47,6 +61,9 @@ public class LevelDB {
     }
 
     public void delete(byte[] key) {
+        if (id == -1) {
+            throw new IllegalStateException("Database is closed");
+        }
         Memory keyMem = new Memory(key.length);
         keyMem.write(0, key, 0, key.length);
         GoLevelDB.leveldb_delete(id, keyMem, key.length);
@@ -54,6 +71,9 @@ public class LevelDB {
     }
 
     public byte[] get(byte[] key) {
+        if (id == -1) {
+            throw new IllegalStateException("Database is closed");
+        }
         Memory keyMem = new Memory(key.length);
         keyMem.write(0, key, 0, key.length);
         PointerByReference valueSize = new PointerByReference();
@@ -70,6 +90,9 @@ public class LevelDB {
     }
 
     public boolean has(byte[] key) {
+        if (id == -1) {
+            throw new IllegalStateException("Database is closed");
+        }
         Memory keyMem = new Memory(key.length);
         keyMem.write(0, key, 0, key.length);
         int i = GoLevelDB.leveldb_has(id, keyMem, key.length);
@@ -82,6 +105,9 @@ public class LevelDB {
     }
 
     public Iterator iterator() {
+        if (id == -1) {
+            throw new IllegalStateException("Database is closed");
+        }
         return new Iterator(GoLevelDB.leveldb_iterator_create(id));
     }
 
@@ -118,11 +144,17 @@ public class LevelDB {
         }
 
         public void setCompression(int compression) {
+            if (id == -1) {
+                throw new IllegalStateException("Options are closed");
+            }
             GoLevelDB.leveldb_options_set_compression(id, compression);
             checkError();
         }
 
         public void close() {
+            if (id == -1) {
+                return;
+            }
             GoLevelDB.leveldb_options_destroy(id);
             id = -1;
             checkError();
@@ -142,12 +174,18 @@ public class LevelDB {
         }
 
         public boolean next() {
+            if (id == -1) {
+                throw new IllegalStateException("Iterator is closed");
+            }
             int i = GoLevelDB.leveldb_iterator_next(id);
             checkError();
             return i == 1;
         }
 
         public byte[] key() {
+            if (id == -1) {
+                throw new IllegalStateException("Iterator is closed");
+            }
             PointerByReference size = new PointerByReference();
             Pointer key = GoLevelDB.leveldb_iterator_key(id, size);
             checkError();
@@ -161,6 +199,9 @@ public class LevelDB {
         }
 
         public byte[] value() {
+            if (id == -1) {
+                throw new IllegalStateException("Iterator is closed");
+            }
             PointerByReference size = new PointerByReference();
             Pointer value = GoLevelDB.leveldb_iterator_value(id, size);
             checkError();
@@ -174,11 +215,17 @@ public class LevelDB {
         }
 
         public void seekToFirst() {
+            if (id == -1) {
+                throw new IllegalStateException("Iterator is closed");
+            }
             GoLevelDB.leveldb_iterator_seek_to_first(id);
             checkError();
         }
 
         public void close() {
+            if (id == -1) {
+                return;
+            }
             GoLevelDB.leveldb_iterator_destroy(id);
             id = -1;
             checkError();

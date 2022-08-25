@@ -6,6 +6,7 @@ import (
 	"github.com/df-mc/goleveldb/leveldb"
 	"github.com/df-mc/goleveldb/leveldb/iterator"
 	"github.com/df-mc/goleveldb/leveldb/opt"
+	"github.com/df-mc/goleveldb/leveldb/util"
 	"sync"
 	"unsafe"
 )
@@ -98,6 +99,15 @@ func leveldb_close(id C.int) {
 		return
 	}
 	DeletePointer(id)
+}
+
+//export leveldb_compact
+func leveldb_compact(id C.int) {
+	db := GetPointer(id).(*leveldb.DB)
+	err := db.CompactRange(util.Range{})
+	if err != nil {
+		lastError = err
+	}
 }
 
 //export leveldb_iterator_create
