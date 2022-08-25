@@ -38,16 +38,17 @@ jobs:
         uses: stCarolas/setup-maven@v4.4
         with:
           maven-version: 3.8.2
+      - name: maven-settings-xml-action
+        uses: whelk-io/maven-settings-xml-action@v20
+        with:
+          servers: >
+            [
+              {
+                "id": "stirante-snapshots",
+                "username": "admin",
+                "password": "${env.NEXUS_PASSWORD}"
+              }
+            ]
+          output_file: .m2/settings.xml
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots package
-      - name: Nexus Repository Publisher for GitHub Actions
-        uses: sonatype-nexus-community/nexus-repo-github-action@1.0.0
-        with:
-          serverUrl: https://nexus.stirante.com
-          username: admin
-          password: ${{ secrets.NEXUS_PASSWORD }}
-          format: maven2
-          repository: maven-releases
-          coordinates: groupId=nl.itslars artifactId=kosmos version=1.1.5
-          assets: extension=jar
-          filename: ./target/kosmos-1.1.4.jar
