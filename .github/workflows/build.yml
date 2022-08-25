@@ -21,6 +21,7 @@ jobs:
         run: |
           brew install zig
       - name: Sync vendor directory
+        working-directory: ./goleveldb
         run: |
           go mod vendor
         shell: bash
