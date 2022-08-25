@@ -47,7 +47,7 @@ jobs:
           username: admin
           password: ${{ secrets.NEXUS_PASSWORD }}
           format: maven2
-          repository: maven-snapshots
-          coordinates: groupId=nl.itslars artifactId=kosmos version=1.1.5-SNAPSHOT
+          repository: maven-releases
+          coordinates: groupId=nl.itslars artifactId=kosmos version=1.1.5
           assets: extension=jar
           filename: ./target/kosmos-1.1.4.jar
