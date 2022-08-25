@@ -39,29 +39,7 @@ func AllocatePointer(ptr interface{}) C.int {
 	return C.int(pointerCounter)
 }
 
-// go build -v -o goleveldb.dll -buildmode=c-shared ./main.go
 func main() {
-	//db := leveldb_open(C.CString("D:\\Downloads\\before\\db"), -1)
-	//if int(db) == -1 {
-	//	fmt.Println("db error")
-	//}
-	//iter := leveldb_iterator_create(db)
-	//if int(iter) == -1 {
-	//	fmt.Println("iter error")
-	//}
-	//if leveldb_error() != nil {
-	//	panic(C.GoString(leveldb_error()))
-	//}
-	//for leveldb_iterator_next(iter) == 1 {
-	//	size := C.int(0)
-	//	key := leveldb_iterator_key(iter, &size)
-	//	fmt.Println(string(C.GoBytes(key, size)))
-	//}
-	//if leveldb_error() != nil {
-	//	panic(C.GoString(leveldb_error()))
-	//}
-	//leveldb_iterator_destroy(iter)
-	//leveldb_close(db)
 }
 
 //export leveldb_free
@@ -71,9 +49,6 @@ func leveldb_free(ptr unsafe.Pointer) {
 
 //export leveldb_error
 func leveldb_error() *C.char {
-	//if lastError == leveldb.ErrNotFound {
-	//	lastError = nil
-	//}
 	defer func() {
 		lastError = nil
 	}()
