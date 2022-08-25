@@ -40,3 +40,14 @@ jobs:
           maven-version: 3.8.2
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots package
+      - name: Nexus Repository Publisher for GitHub Actions
+        uses: sonatype-nexus-community/nexus-repo-github-action@1.0.0
+        with:
+          serverUrl: https://nexus.stirante.com
+          username: admin
+          password: ${{ secrets.NEXUS_PASSWORD }}
+          format: maven2
+          repository: maven-snapshots
+          coordinates: groupId=nl.itslars artifactId=kosmos version=1.1.5-SNAPSHOT
+          assets: extension=jar
+          filename: ./target/kosmos-1.1.4.jar
