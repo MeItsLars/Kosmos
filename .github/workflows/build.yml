@@ -46,7 +46,7 @@ jobs:
               {
                 "id": "nexus-snapshots",
                 "username": "admin",
-                "password": "${env.NEXUS_PASSWORD}"
+                "password": "${secrets.NEXUS_PASSWORD}"
               }
             ]
           output_file: maven/settings.xml
