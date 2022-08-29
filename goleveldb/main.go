@@ -11,8 +11,14 @@ import (
 	"unsafe"
 )
 
+type DBParams struct {
+	path    string
+	options *opt.Options
+}
+
 var lock = sync.RWMutex{}
 var pointers = map[int]interface{}{}
+var params = map[int]DBParams{}
 var pointerCounter = 0
 var lastError error
 
@@ -32,6 +38,9 @@ func DeletePointer(id C.int) {
 	lock.RLock()
 	defer lock.RUnlock()
 	delete(pointers, int(id))
+	if _, ok := params[int(id)]; ok {
+		delete(params, int(id))
+	}
 }
 
 func AllocatePointer(ptr interface{}) C.int {
@@ -41,28 +50,96 @@ func AllocatePointer(ptr interface{}) C.int {
 }
 
 func main() {
-}
-
-//export leveldb_shrink
-func leveldb_shrink(id C.int) {
-	// This method is not yet fully implemented.
-	db := GetPointer(id).(*leveldb.DB)
-	newIterator := db.NewIterator(nil, nil)
-	for newIterator.Next() {
-		err := db.Put(newIterator.Key(), newIterator.Value(), nil)
+	//db := leveldb_open(C.CString("D:\\Downloads\\before\\db"), C.int(-1))
+	//leveldb_shrink(db)
+	//leveldb_close(db)
+	file, err := leveldb.OpenFile("D:\\Downloads\\before\\db", &opt.Options{
+		Compression:      opt.FlateCompression,
+		CompressionLevel: 9,
+		BlockSize:        4 * opt.GiB,
+	})
+	if err != nil {
+		panic(err)
+	}
+	iter := file.NewIterator(nil, nil)
+	iter.First()
+	for iter.Next() {
+		err := file.Put(iter.Key(), iter.Value(), nil)
 		if err != nil {
 			panic(err)
 		}
 	}
-	if newIterator.Error() != nil {
-		lastError = newIterator.Error()
+	if iter.Error() != nil {
+		panic(iter.Error())
+	}
+	iter.Release()
+	err = file.CompactRange(util.Range{})
+	if err != nil {
+		panic(err)
+	}
+	err = file.Close()
+}
+
+func Shrink(db *leveldb.DB) {
+	iter := db.NewIterator(nil, nil)
+	iter.First()
+	for iter.Next() {
+		err := db.Put(iter.Key(), iter.Value(), nil)
+		if err != nil {
+			lastError = err
+			iter.Release()
+			return
+		}
+	}
+	if iter.Error() != nil {
+		lastError = iter.Error()
+		iter.Release()
 		return
 	}
-	newIterator.Release()
+	iter.Release()
 	err := db.CompactRange(util.Range{})
 	if err != nil {
 		lastError = err
 		return
+	}
+}
+
+//export leveldb_shrink_file
+func leveldb_shrink_file(path *C.char) {
+	db, err := leveldb.OpenFile(C.GoString(path), &opt.Options{
+		Compression:      opt.FlateCompression,
+		CompressionLevel: 9,
+		BlockSize:        4 * opt.GiB,
+	})
+	if err != nil {
+		lastError = err
+	}
+	Shrink(db)
+	// Close the database.
+	err = db.Close()
+	if err != nil {
+		lastError = err
+		return
+	}
+}
+
+//export leveldb_shrink
+func leveldb_shrink(id C.int) {
+	if param, ok := params[int(id)]; ok {
+		db := GetPointer(id).(*leveldb.DB)
+		// Close the database.
+		err := db.Close()
+		if err != nil {
+			lastError = err
+			return
+		}
+		leveldb_shrink_file(C.CString(param.path))
+		// Reopen the database with original options.
+		db, err = leveldb.OpenFile(param.path, param.options)
+		if err != nil {
+			lastError = err
+		}
+		SetPointer(id, db)
 	}
 }
 
@@ -98,6 +175,12 @@ func leveldb_options_set_compression(id C.int, compression C.uint) {
 	options.Compression = opt.Compression(uint(compression))
 }
 
+//export leveldb_options_set_compression_level
+func leveldb_options_set_compression_level(id C.int, compressionLevel C.int) {
+	options := GetPointer(id).(opt.Options)
+	options.CompressionLevel = int(compressionLevel)
+}
+
 //export leveldb_options_set_block_size
 func leveldb_options_set_block_size(id C.int, compression C.int) {
 	options := GetPointer(id).(opt.Options)
@@ -111,12 +194,18 @@ func leveldb_open(path *C.char, options C.int) C.int {
 		ptr := GetPointer(options).(opt.Options)
 		o = &ptr
 	}
-	db, err := leveldb.OpenFile(C.GoString(path), o)
+	goPath := C.GoString(path)
+	db, err := leveldb.OpenFile(goPath, o)
 	if err != nil {
 		lastError = err
 		return -1
 	}
-	return AllocatePointer(db)
+	ptr := AllocatePointer(db)
+	params[int(ptr)] = DBParams{
+		path:    goPath,
+		options: o,
+	}
+	return ptr
 }
 
 //export leveldb_close
@@ -128,15 +217,6 @@ func leveldb_close(id C.int) {
 		return
 	}
 	DeletePointer(id)
-}
-
-//export leveldb_compact
-func leveldb_compact(id C.int) {
-	db := GetPointer(id).(*leveldb.DB)
-	err := db.CompactRange(util.Range{})
-	if err != nil {
-		lastError = err
-	}
 }
 
 //export leveldb_iterator_create

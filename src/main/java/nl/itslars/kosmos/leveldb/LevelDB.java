@@ -23,6 +23,10 @@ public class LevelDB {
         }
     }
 
+    public static void shrink(String path) {
+        GoLevelDB.leveldb_shrink_file(path);
+    }
+
     public static LevelDB open(String path) {
         return open(path, null);
     }
@@ -45,14 +49,6 @@ public class LevelDB {
             return;
         }
         GoLevelDB.leveldb_shrink(id);
-        checkError();
-    }
-
-    public void compact() {
-        if (id == -1) {
-            throw new IllegalStateException("Database is closed");
-        }
-        GoLevelDB.leveldb_compact(id);
         checkError();
     }
 
@@ -160,6 +156,14 @@ public class LevelDB {
                 throw new IllegalStateException("Options are closed");
             }
             GoLevelDB.leveldb_options_set_compression(id, compression);
+            checkError();
+        }
+
+        public void setCompressionLevel(int compressionLevel) {
+            if (id == -1) {
+                throw new IllegalStateException("Options are closed");
+            }
+            GoLevelDB.leveldb_options_set_compression_level(id, compressionLevel);
             checkError();
         }
 
