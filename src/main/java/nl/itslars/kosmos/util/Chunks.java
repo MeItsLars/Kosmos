@@ -43,7 +43,7 @@ public class Chunks {
                 result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), value));
             } else {
                 // SubChunks
-                for (byte subChunkHeight = 0; subChunkHeight < 16; subChunkHeight++) {
+                for (byte subChunkHeight = -4; subChunkHeight < 16; subChunkHeight++) {
                     result.add(generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), value, subChunkHeight));
                 }
             }
@@ -73,7 +73,7 @@ public class Chunks {
      */
     private static void loadChunkData2D(LevelDB db, Chunk preset) {
         // Generate the level DB key
-        byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 45, (byte) 0);
+        byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), LevelChunkTag.Data2D, (byte) 0);
         boolean oldFormat = db.has(levelDBKey);
         byte[] value = null;
         // Check for new format
@@ -81,7 +81,7 @@ public class Chunks {
             value = db.get(levelDBKey);
         }
         else {
-            levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 43, (byte) 0);
+            levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), LevelChunkTag.Data3D, (byte) 0);
             if (db.has(levelDBKey)) {
                 value = db.get(levelDBKey);
             }
@@ -116,7 +116,7 @@ public class Chunks {
     @SneakyThrows
     private static void loadChunkTileEntities(LevelDB db, Chunk preset) {
         // Generate the level DB key
-        byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 49, (byte) 0);
+        byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), LevelChunkTag.BlockEntity, (byte) 0);
         // Return if no tile entities exist for this chunk
         if (!db.has(levelDBKey)) {
             return;
@@ -139,7 +139,7 @@ public class Chunks {
     @SneakyThrows
     private static void loadChunkEntities(LevelDB db, Chunk preset) {
         // Generate the level DB key
-        byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 50, (byte) 0);
+        byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), LevelChunkTag.Entity, (byte) 0);
         // Return if no entities exist for this chunk
         if (!db.has(levelDBKey)) {
             return;
@@ -165,7 +165,7 @@ public class Chunks {
         // Loop through all possible subchunks
         for (byte subChunkHeight = -4; subChunkHeight < 16; subChunkHeight++) {
             // Generate the level DB key
-            byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 47, subChunkHeight);
+            byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), LevelChunkTag.SubChunkPrefix, subChunkHeight);
 
             // If the value didn't exist, the top subchunk is reached, and we can stop.
             if (!db.has(levelDBKey)) {
@@ -322,7 +322,7 @@ public class Chunks {
      */
     private static void saveChunkData2D(LevelDB db, Chunk chunk) {
         // Generate the level DB key
-        byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), (byte) 45, (byte) 0);
+        byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), LevelChunkTag.Data2D, (byte) 0);
         byte[] value = new byte[768];
 
         // For all blocks, set the values elevation and biome
@@ -349,7 +349,7 @@ public class Chunks {
     @SneakyThrows
     private static void saveChunkTileEntities(LevelDB db, Chunk chunk) {
         // Generate the level DB key
-        byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), (byte) 49, (byte) 0);
+        byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), LevelChunkTag.BlockEntity, (byte) 0);
 
         // Serialize and write all tile entities to an output stream
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -370,7 +370,7 @@ public class Chunks {
     @SneakyThrows
     private static void saveChunkEntities(LevelDB db, Chunk chunk) {
         // Generate the level DB key
-        byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), (byte) 50, (byte) 0);
+        byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), LevelChunkTag.Entity, (byte) 0);
 
         // Serialize and write all entities to an output stream
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -396,7 +396,7 @@ public class Chunks {
         chunk.getSubChunks().forEach((subChunkHeight, deserializedSubChunk) -> {
             SerializedSubChunk subChunk = deserializedSubChunk.serialize();
             // Generate the level DB key
-            byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), (byte) 47, (byte) ((short) subChunkHeight));
+            byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), LevelChunkTag.SubChunkPrefix, (byte) ((short) subChunkHeight));
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             // Write version (8)
@@ -518,7 +518,7 @@ public class Chunks {
      */
     public static byte[] generateLevelDBKey(int chunkX, int chunkZ, Dimension dimension, byte recordType, byte subChunkIndex) {
         // Create a new ByteBuffer with the required size
-        ByteBuffer buffer = ByteBuffer.allocate(8 + (dimension == Dimension.OVERWORLD ? 0 : 4) + 1 + (recordType != 47 ? 0 : 1)).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer buffer = ByteBuffer.allocate(8 + (dimension == Dimension.OVERWORLD ? 0 : 4) + 1 + (recordType != LevelChunkTag.SubChunkPrefix.getId() ? 0 : 1)).order(ByteOrder.LITTLE_ENDIAN);
         // Add the chunk X and Z
         buffer.putInt(chunkX).putInt(chunkZ);
         // If the dimension is not the overworld, add it to the key
@@ -528,7 +528,7 @@ public class Chunks {
         // Add the record type
         buffer.put(recordType);
         // If the record is a SubChunk, also add the SubChunk index
-        if (recordType == 47) {
+        if (recordType == LevelChunkTag.SubChunkPrefix.getId()) {
             buffer.put(subChunkIndex);
         }
         return buffer.array();
