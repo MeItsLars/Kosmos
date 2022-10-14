@@ -4,7 +4,7 @@ import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
 
-public class LevelDB {
+public class LevelDB implements AutoCloseable {
 
     private int id;
 
@@ -140,7 +140,7 @@ public class LevelDB {
         }
     }
 
-    public static class Options {
+    public static class Options implements AutoCloseable {
         private int id;
 
         private Options(int id) {
@@ -185,7 +185,7 @@ public class LevelDB {
         }
     }
 
-    public static class Iterator {
+    public static class Iterator implements AutoCloseable {
 
         private int id;
 
