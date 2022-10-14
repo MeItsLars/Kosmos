@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import nl.itslars.mcpenbt.tags.CompoundTag;
 import nl.itslars.mcpenbt.tags.IntTag;
+import nl.itslars.mcpenbt.tags.StringTag;
 import nl.itslars.mcpenbt.tags.Tag;
 
 import java.util.Optional;
@@ -34,7 +35,7 @@ public class TileEntity {
      */
     public int getX() {
         Optional<Tag> tagOptional = parent.getByName("x");
-        if (!tagOptional.isPresent()) throw new IllegalArgumentException("x setting was not found in level.dat");
+        if (!tagOptional.isPresent()) throw new IllegalArgumentException("x setting was not found in tile entity");
 
         return tagOptional.get().getAsInt().getValue();
     }
@@ -53,7 +54,7 @@ public class TileEntity {
      */
     public int getY() {
         Optional<Tag> tagOptional = parent.getByName("y");
-        if (!tagOptional.isPresent()) throw new IllegalArgumentException("y setting was not found in level.dat");
+        if (!tagOptional.isPresent()) throw new IllegalArgumentException("y setting was not found in tile entity");
 
         return tagOptional.get().getAsInt().getValue();
     }
@@ -72,9 +73,27 @@ public class TileEntity {
      */
     public int getZ() {
         Optional<Tag> tagOptional = parent.getByName("z");
-        if (!tagOptional.isPresent()) throw new IllegalArgumentException("z setting was not found in level.dat");
+        if (!tagOptional.isPresent()) throw new IllegalArgumentException("z setting was not found in tile entity");
 
         return tagOptional.get().getAsInt().getValue();
     }
 
+    /**
+     * Attempts to get the tile entity's id. Throws an exception if the id setting was not found.
+     * @return The tile entity's id
+     */
+    public String getId() {
+        Optional<Tag> tagOptional = parent.getByName("id");
+        if (!tagOptional.isPresent()) throw new IllegalArgumentException("id setting was not found in tile entity");
+
+        return tagOptional.get().getAsString().getValue();
+    }
+
+    /**
+     * Sets the tile entity's id to the given value
+     * @param value The tile entity's id
+     */
+    public void setId(String value) {
+        parent.change("id", new StringTag("id", value));
+    }
 }

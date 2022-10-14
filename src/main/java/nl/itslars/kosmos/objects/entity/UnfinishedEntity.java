@@ -8,7 +8,7 @@ import nl.itslars.mcpenbt.tags.CompoundTag;
  */
 public class UnfinishedEntity extends Entity {
 
-    public UnfinishedEntity(CompoundTag parentCompoundTag) {
-        super(parentCompoundTag);
+    public UnfinishedEntity(long id, CompoundTag parentCompoundTag) {
+        super(id, parentCompoundTag);
     }
 }

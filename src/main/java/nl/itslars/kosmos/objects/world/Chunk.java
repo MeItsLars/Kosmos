@@ -15,7 +15,7 @@ import java.util.function.UnaryOperator;
 /**
  * Class for representing a Chunk. Note the difference between this class and a {@link SubChunk}.
  * This class represents a 16x16x256 area in a certain dimension. This area is divided into {@link SubChunk}
- * objects, that are stored inside of this class. The class contains chunk information like elevation, biomes
+ * objects, that are stored inside this class. The class contains chunk information like elevation, biomes
  * entities, tile entities, and of course all blocks.
  */
 @RequiredArgsConstructor
@@ -31,13 +31,10 @@ public class Chunk {
     private final Dimension dimension;
     // Terrain loader
     private final BiConsumer<LevelDB, Chunk> terrainLoader;
-    // Entity loader
-    private final BiConsumer<LevelDB, Chunk> entitiesLoader;
     // Data 2D loader
     private final BiConsumer<LevelDB, Chunk> data2DLoader;
 
     private boolean terrainLoaded = false;
-    private boolean entitiesLoaded = false;
     private boolean data2DLoaded = false;
 
     // The 2d elevation map, that contains the maximum height of each x/z combination, plus 1.
@@ -46,8 +43,6 @@ public class Chunk {
     // The 2d biome map, that contains the biome for each x/z combination, represented as a number.
     private final byte[][] biomes = new byte[16][16];
 
-    // The set of entities inside this chunk
-    private final Set<Entity> entities = new HashSet<>();
     // The set of tile entities inside this chunk
     private final Set<TileEntity> tileEntities = new HashSet<>();
 
@@ -65,19 +60,6 @@ public class Chunk {
         terrainLoaded = true;
         // Load the terrain
         terrainLoader.accept(world.getWorld().getDb(), this);
-    }
-
-    /**
-     * Make sure the entities are loaded before accessing it.
-     */
-    private void ensureEntitiesLoaded() {
-        if (entitiesLoaded) {
-            return;
-        }
-        // Mark as loaded before executing the loader to avoid stack overflow error.
-        entitiesLoaded = true;
-        // Load the entities
-        entitiesLoader.accept(world.getWorld().getDb(), this);
     }
 
     /**
@@ -237,7 +219,7 @@ public class Chunk {
      * Saves the chunk to the Minecraft Bedrock LevelDB storage
      */
     public void save() {
-        Chunks.saveChunk(world.getWorld().getDb(), this, terrainLoaded, entitiesLoaded, data2DLoaded);
+        Chunks.saveChunk(world.getWorld().getDb(), this, terrainLoaded, data2DLoaded);
     }
 
     /**
@@ -300,11 +282,6 @@ public class Chunk {
     public byte[][] getBiomes() {
         ensureData2DLoaded();
         return this.biomes;
-    }
-
-    public Set<Entity> getEntities() {
-        ensureEntitiesLoaded();
-        return this.entities;
     }
 
     public Set<TileEntity> getTileEntities() {

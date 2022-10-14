@@ -61,19 +61,17 @@ class KosmosTest {
 
     @Test
     void testEntityCount() {
-        AtomicInteger entityCount1 = new AtomicInteger(0);
+        AtomicInteger entityCount1 = new AtomicInteger(currentTestWorld.getEntities().size());
         AtomicInteger tileEntityCount1 = new AtomicInteger(0);
         currentTestWorld.getChunk(0, 0).ifPresent(chunk -> {
-            entityCount1.set(chunk.getEntities().size());
             tileEntityCount1.set(chunk.getTileEntities().size());
         });
         currentTestWorld.save();
         currentTestWorld.unloadChunks();
         reOpenTestWorld();
-        AtomicInteger entityCount2 = new AtomicInteger(0);
+        AtomicInteger entityCount2 = new AtomicInteger(currentTestWorld.getEntities().size());
         AtomicInteger tileEntityCount2 = new AtomicInteger(0);
         currentTestWorld.getChunk(0, 0).ifPresent(chunk -> {
-            entityCount2.set(chunk.getEntities().size());
             tileEntityCount2.set(chunk.getTileEntities().size());
         });
         Assertions.assertEquals(entityCount1.get(), entityCount2.get());

@@ -5,10 +5,7 @@ import nl.itslars.kosmos.leveldb.LevelDB;
 import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.objects.entity.Entity;
 import nl.itslars.kosmos.objects.entity.TileEntity;
-import nl.itslars.kosmos.objects.world.Chunk;
-import nl.itslars.kosmos.objects.world.ChunkPreset;
-import nl.itslars.kosmos.objects.world.SerializedSubChunk;
-import nl.itslars.kosmos.objects.world.SubChunk;
+import nl.itslars.kosmos.objects.world.*;
 import nl.itslars.mcpenbt.NBTUtil;
 import nl.itslars.mcpenbt.tags.CompoundTag;
 import nl.itslars.mcpenbt.tags.Tag;
@@ -58,12 +55,13 @@ public class Chunks {
      */
     public static Chunk loadChunk(ChunkPreset preset) {
         // Create a new chunk instance
+        loadChunkEntities(preset);
         return new Chunk(preset.getWorld(), preset.getX(), preset.getZ(), preset.getDimension(),
                 (db, chunk) -> {
             loadChunkTileEntities(db, chunk);
             loadChunkSubChunks(db, chunk);
             linkTileEntities(chunk);
-        }, Chunks::loadChunkEntities, Chunks::loadChunkData2D);
+        }, Chunks::loadChunkData2D);
     }
 
     /**
@@ -132,14 +130,14 @@ public class Chunks {
     }
 
     /**
-     * Load all entities that are stored for this chunk, into the chunk
-     * @param db The LevelDB storage
-     * @param preset The chunk object
+     * Load all entities that are stored for this chunk in a legacy format, into the chunk
+     * @param preset The chunk preset object
      */
     @SneakyThrows
-    private static void loadChunkEntities(LevelDB db, Chunk preset) {
+    private static void loadChunkEntities(ChunkPreset preset) {
+        LevelDB db = preset.getWorld().getWorld().getDb();
         // Generate the level DB key
-        byte[] levelDBKey = generateLevelDBKey(preset.getChunkX(), preset.getChunkZ(), preset.getDimension(), (byte) 50, (byte) 0);
+        byte[] levelDBKey = generateLevelDBKey(preset.getX(), preset.getZ(), preset.getDimension(), (byte) 50, (byte) 0);
         // Return if no entities exist for this chunk
         if (!db.has(levelDBKey)) {
             return;
@@ -150,7 +148,7 @@ public class Chunks {
         InputStream stream = new ByteArrayInputStream(value);
         while (stream.available() != 0) {
             CompoundTag entity = (CompoundTag) NBTUtil.read(false, stream);
-            preset.getEntities().add(Entities.createEntity(entity));
+            preset.getWorld().getEntities().add(Entities.createEntity(entity));
         }
     }
 
@@ -299,19 +297,15 @@ public class Chunks {
      * @param db The LevelDB storage
      * @param chunk The chunk object
      * @param terrainLoaded whether the terrain was loaded and should be saved
-     * @param entitiesLoaded whether the entities were loaded and should be saved
      * @param data2DLoaded whether the data2D was loaded and should be saved
      */
-    public static void saveChunk(LevelDB db, Chunk chunk, boolean terrainLoaded, boolean entitiesLoaded, boolean data2DLoaded) {
+    public static void saveChunk(LevelDB db, Chunk chunk, boolean terrainLoaded, boolean data2DLoaded) {
         if (data2DLoaded) {
             saveChunkData2D(db, chunk);
         }
         if (terrainLoaded) {
             saveChunkTileEntities(db, chunk);
             saveChunkSubChunks(db, chunk);
-        }
-        if (entitiesLoaded) {
-            saveChunkEntities(db, chunk);
         }
     }
 
@@ -355,27 +349,6 @@ public class Chunks {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         for (TileEntity tileEntity : chunk.getTileEntities()) {
             byte[] bytes = NBTUtil.write(tileEntity.getParent());
-            outputStream.write(bytes);
-        }
-
-        // Save to DB
-        db.put(levelDBKey, outputStream.toByteArray());
-    }
-
-    /**
-     * Saves the entity data from the given chunk to the LevelDB storage
-     * @param db The LevelDB storage
-     * @param chunk The chunk object
-     */
-    @SneakyThrows
-    private static void saveChunkEntities(LevelDB db, Chunk chunk) {
-        // Generate the level DB key
-        byte[] levelDBKey = generateLevelDBKey(chunk.getChunkX(), chunk.getChunkZ(), chunk.getDimension(), (byte) 50, (byte) 0);
-
-        // Serialize and write all entities to an output stream
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        for (Entity entity : chunk.getEntities()) {
-            byte[] bytes = NBTUtil.write(entity.getParentCompoundTag());
             outputStream.write(bytes);
         }
 

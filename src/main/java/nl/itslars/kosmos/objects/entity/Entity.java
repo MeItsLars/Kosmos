@@ -28,6 +28,8 @@ import static nl.itslars.kosmos.util.EntityNBTConstants.*;
 @Getter
 public abstract class Entity {
 
+    // The ID of the entity from the levelDB key
+    private final long worldId;
     // The Compound Tag that represents this entire entity. All methods (!) directly change or retrieve information
     // from this object.
     private CompoundTag parentCompoundTag;

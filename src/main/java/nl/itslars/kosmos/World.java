@@ -5,12 +5,14 @@ import lombok.Getter;
 import nl.itslars.kosmos.enums.Dimension;
 import nl.itslars.kosmos.leveldb.LevelDB;
 import nl.itslars.kosmos.objects.entity.Player;
+import nl.itslars.kosmos.objects.entity.UnfinishedEntity;
 import nl.itslars.kosmos.objects.settings.LevelDatFile;
 import nl.itslars.kosmos.objects.world.ChunkPreset;
 import nl.itslars.kosmos.objects.world.WorldData;
 import nl.itslars.kosmos.util.FileUtils;
 import nl.itslars.mcpenbt.NBTUtil;
 import nl.itslars.mcpenbt.tags.CompoundTag;
+import nl.itslars.mcpenbt.tags.Tag;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +22,7 @@ import java.nio.charset.Charset;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -84,7 +87,10 @@ public class World {
                     byte[] pointer = tag.getAsString().getValue().getBytes();
                     worldData.addPlayerPointer(key, pointer);
                 });
-            } else if (keyName.matches("^[a-zA-Z]*$") || keyName.startsWith("map_") || keyName.startsWith("digp") || keyName.startsWith("actorprefix")) {
+            } else if (keyName.startsWith("actorprefix")) {
+                Tag read = NBTUtil.read(false, value);
+                worldData.getEntities().add(new UnfinishedEntity(ByteBuffer.wrap(Arrays.copyOfRange(key, 11, key.length)).getLong(), (CompoundTag) read));
+            }  else if (keyName.matches("^[a-zA-Z]*$") || keyName.startsWith("map_") || keyName.startsWith("digp")) {
                 // Check if the key represents a data attribute and if so, ignore it
                 // This check can NOT be removed, otherwise the next chunk load may trigger an exception
             } else if (key.length >= 8 && key.length <= 14) {
