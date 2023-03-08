@@ -53,7 +53,7 @@ func main() {
 	//db := leveldb_open(C.CString("D:\\Downloads\\before\\db"), C.int(-1))
 	//leveldb_shrink(db)
 	//leveldb_close(db)
-	file, err := leveldb.OpenFile("D:\\Downloads\\before\\db", &opt.Options{
+	file, err := leveldb.OpenFile("C:\\Users\\brzoz\\AppData\\Local\\Packages\\Microsoft.MinecraftUWP_8wekyb3d8bbwe\\LocalState\\games\\com.mojang\\minecraftWorlds\\dE-rY2yPGQA=\\db", &opt.Options{
 		Compression:      opt.FlateCompression,
 		CompressionLevel: 9,
 		BlockSize:        4 * opt.GiB,
