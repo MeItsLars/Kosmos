@@ -57,6 +57,26 @@ public abstract class Entity {
         setList(ENTITY_NBT_POS, position, TagType.TAG_FLOAT);
     }
 
+    public float getX() {
+        return getPosition().get(0);
+    }
+
+    public float getY() {
+        return getPosition().get(1);
+    }
+
+    public float getZ() {
+        return getPosition().get(2);
+    }
+
+    public int getChunkX() {
+        return (int) Math.floor(getPosition().get(0) / 16);
+    }
+
+    public int getChunkZ() {
+        return (int) Math.floor(getPosition().get(2) / 16);
+    }
+
     public void setRotation(float yaw, float pitch) {
         setRotation(Arrays.asList(yaw, pitch));
     }

@@ -11,6 +11,7 @@ import nl.itslars.kosmos.util.Chunks;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 /**
  * Class for representing a Chunk. Note the difference between this class and a {@link SubChunk}.
@@ -292,5 +293,9 @@ public class Chunk {
     public Map<Short, SubChunk> getSubChunks() {
         ensureTerrainLoaded();
         return this.subChunks;
+    }
+
+    public List<Entity> getEntities() {
+        return Collections.unmodifiableList(world.getEntities().stream().filter(entity -> entity.getChunkX() == chunkX && entity.getChunkZ() == chunkZ).collect(Collectors.toList()));
     }
 }
