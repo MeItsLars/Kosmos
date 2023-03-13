@@ -50,34 +50,6 @@ func AllocatePointer(ptr interface{}) C.int {
 }
 
 func main() {
-	//db := leveldb_open(C.CString("D:\\Downloads\\before\\db"), C.int(-1))
-	//leveldb_shrink(db)
-	//leveldb_close(db)
-	file, err := leveldb.OpenFile("C:\\Users\\brzoz\\AppData\\Local\\Packages\\Microsoft.MinecraftUWP_8wekyb3d8bbwe\\LocalState\\games\\com.mojang\\minecraftWorlds\\dE-rY2yPGQA=\\db", &opt.Options{
-		Compression:      opt.FlateCompression,
-		CompressionLevel: 9,
-		BlockSize:        4 * opt.GiB,
-	})
-	if err != nil {
-		panic(err)
-	}
-	iter := file.NewIterator(nil, nil)
-	iter.First()
-	for iter.Next() {
-		err := file.Put(iter.Key(), iter.Value(), nil)
-		if err != nil {
-			panic(err)
-		}
-	}
-	if iter.Error() != nil {
-		panic(iter.Error())
-	}
-	iter.Release()
-	err = file.CompactRange(util.Range{})
-	if err != nil {
-		panic(err)
-	}
-	err = file.Close()
 }
 
 func Shrink(db *leveldb.DB) {
