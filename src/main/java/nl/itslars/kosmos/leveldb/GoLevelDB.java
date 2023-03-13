@@ -17,10 +17,10 @@ public class GoLevelDB {
     public static native void leveldb_options_set_compression(int options, int compression);
     public static native void leveldb_options_set_compression_level(int options, int compressionLevel);
     public static native void leveldb_options_set_block_size(int options, int blockSize);
-    public static native int leveldb_open(String path, int options);
+    public static native int leveldb_open(byte[] path, int options);
     public static native void leveldb_close(int db);
     public static native void leveldb_shrink(int db);
-    public static native void leveldb_shrink_file(String path);
+    public static native void leveldb_shrink_file(byte[] path);
     public static native int leveldb_iterator_create(int iterator);
     public static native void leveldb_iterator_destroy(int iterator);
     public static native int leveldb_iterator_next(int iterator);
@@ -31,6 +31,6 @@ public class GoLevelDB {
     public static native int leveldb_has(int db, Pointer key, int keySize);
     public static native void leveldb_put(int db, Pointer key, int keySize, Pointer value, int valueSize);
     public static native void leveldb_delete(int db, Pointer key, int keySize);
-    public static native void leveldb_repair(String path);
+    public static native void leveldb_repair(byte[] path);
 
 }

@@ -4,12 +4,15 @@ import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
 
+import java.nio.charset.StandardCharsets;
+
 public class LevelDB implements AutoCloseable {
 
     private int id;
 
     private LevelDB(int id) {
         if (id == -1) {
+            checkError();
             throw new IllegalArgumentException("Invalid id");
         }
         this.id = id;
@@ -24,7 +27,10 @@ public class LevelDB implements AutoCloseable {
     }
 
     public static void shrink(String path) {
-        GoLevelDB.leveldb_shrink_file(path);
+        if (path == null) {
+            throw new IllegalArgumentException("Path cannot be null");
+        }
+        GoLevelDB.leveldb_shrink_file(path.getBytes(StandardCharsets.UTF_8));
     }
 
     public static LevelDB open(String path) {
@@ -32,7 +38,10 @@ public class LevelDB implements AutoCloseable {
     }
 
     public static LevelDB open(String path, Options options) {
-        return new LevelDB(GoLevelDB.leveldb_open(path, options == null ? -1 : options.id));
+        if (path == null) {
+            throw new IllegalArgumentException("Path cannot be null");
+        }
+        return new LevelDB(GoLevelDB.leveldb_open(path.getBytes(StandardCharsets.UTF_8), options == null ? -1 : options.id));
     }
 
     public void close() {
@@ -108,7 +117,10 @@ public class LevelDB implements AutoCloseable {
     }
 
     public static void repair(String path) {
-        GoLevelDB.leveldb_repair(path);
+        if (path == null) {
+            throw new IllegalArgumentException("Path cannot be null");
+        }
+        GoLevelDB.leveldb_repair(path.getBytes(StandardCharsets.UTF_8));
         checkError();
     }
 
