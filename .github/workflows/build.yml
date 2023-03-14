@@ -38,22 +38,5 @@ jobs:
         uses: stCarolas/setup-maven@v4.4
         with:
           maven-version: 3.8.2
-      - name: Set up Maven settings
-        uses: whelk-io/maven-settings-xml-action@v20
-        with:
-          servers: >
-            [
-              {
-                "id": "nexus-snapshots",
-                "username": "admin",
-                "password": "${{secrets.NEXUS_PASSWORD}}"
-              },
-              {
-                "id": "nexus-releases",
-                "username": "admin",
-                "password": "${{secrets.NEXUS_PASSWORD}}"
-              }
-            ]
-          output_file: maven/settings.xml
       - name: Build with Maven
-        run: mvn --settings maven/settings.xml --batch-mode --update-snapshots deploy
+        run: mvn --batch-mode --update-snapshots package
