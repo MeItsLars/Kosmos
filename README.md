@@ -10,8 +10,7 @@ Team Workbench and I have decided that this project may be used by anyone under 
 This means that you are allowed to use this project commercially for free, but you can't claim you made it.
 Another important point is that I am not responsible for the effect of this code when you use it.
 
-Kosmos accesses the LevelDB through a modified wrapper library, made by Dain and Tinfoiled.
-[More information about LevelDB library can be found here.](https://github.com/MeItsLars/LevelDB-MCPE)
+Kosmos accesses LevelDB through a library written in Go. Huge credits to [Stirante](https://github.com/stirante) for making this (and a lot of other features) possible!
 
 # Contribution
 As mentioned, you're free to use this program. However, if you made something useful, or you changed the code to be better or faster, 
@@ -37,7 +36,7 @@ Kosmos was made in Java 8, and can be used using the following Maven dependency 
 <dependency>
     <groupId>com.github.MeItsLars</groupId>
     <artifactId>Kosmos</artifactId>
-    <version>1.1.5</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
