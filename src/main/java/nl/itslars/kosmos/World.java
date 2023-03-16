@@ -1,19 +1,18 @@
 package nl.itslars.kosmos;
 
+import com.google.common.io.Files;
 import lombok.Getter;
 import nl.itslars.kosmos.enums.Dimension;
+import nl.itslars.kosmos.leveldb.LevelDB;
 import nl.itslars.kosmos.objects.entity.Player;
+import nl.itslars.kosmos.objects.entity.UnfinishedEntity;
 import nl.itslars.kosmos.objects.settings.LevelDatFile;
 import nl.itslars.kosmos.objects.world.ChunkPreset;
 import nl.itslars.kosmos.objects.world.WorldData;
+import nl.itslars.kosmos.util.FileUtils;
 import nl.itslars.mcpenbt.NBTUtil;
 import nl.itslars.mcpenbt.tags.CompoundTag;
-import org.iq80.leveldb.DB;
-import org.iq80.leveldb.DBIterator;
-import org.iq80.leveldb.Options;
-import org.iq80.leveldb.impl.Iq80DBFactory;
-import org.iq80.leveldb.shaded.guava.io.Files;
-import org.iq80.leveldb.util.FileUtils;
+import nl.itslars.mcpenbt.tags.Tag;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,9 +22,8 @@ import java.nio.charset.Charset;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * Class for representing the LevelDB storage communication for a world.
@@ -36,7 +34,7 @@ public class World {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd-HH.mm.ss");
 
     // The LevelDB storage
-    private final DB db;
+    private final LevelDB db;
     // The level.dat file
     private final File levelDat;
     // The WorldData object
@@ -44,10 +42,11 @@ public class World {
     private final String name;
 
     private World(File directory, String name) throws IOException {
-        Options options = new Options();
-        options.createIfMissing(true);
+        LevelDB.Options options = LevelDB.createOptions();
+        options.setCompression(LevelDB.CompressionType.RAW_ZLIB.getId());
+        options.setBlockSize(4194304);
         // Load the LevelDB and level.dat file
-        this.db = Iq80DBFactory.factory.open(new File(directory, "db"), options);
+        this.db = LevelDB.open(new File(directory, "db").getAbsolutePath(), options);
         this.levelDat = new File(directory, "level.dat");
         this.name = name;
 
@@ -64,21 +63,16 @@ public class World {
     private void loadWorld() {
         worldData = new WorldData(this, levelDat, name);
 
-        DBIterator iterator = db.iterator();
+        LevelDB.Iterator iterator = db.iterator();
         iterator.seekToFirst();
 
         // Loop through all entries in the LevelDB database
-        Map.Entry<byte[], byte[]> entry;
-
-        try {
-            entry = iterator.next();
-        } catch (NoSuchElementException e) {
-            return;
-        }
-
-        while (entry != null) {
-            byte[] key = entry.getKey();
-            byte[] value = entry.getValue();
+        while (iterator.next()) {
+            byte[] key = iterator.key();
+            if (key == null || key.length == 0) {
+                continue;
+            }
+            byte[] value = iterator.value();
             String keyName = new String(key);
 
             if (keyName.equals("~local_player") || keyName.startsWith("player_server")) {
@@ -93,7 +87,10 @@ public class World {
                     byte[] pointer = tag.getAsString().getValue().getBytes();
                     worldData.addPlayerPointer(key, pointer);
                 });
-            } else if (keyName.matches("^[a-zA-Z]*$") || keyName.startsWith("map_") || keyName.startsWith("digp")) {
+            } else if (keyName.startsWith("actorprefix")) {
+                Tag read = NBTUtil.read(false, value);
+                worldData.getEntities().add(new UnfinishedEntity(ByteBuffer.wrap(Arrays.copyOfRange(key, 11, key.length)).getLong(), (CompoundTag) read));
+            }  else if (keyName.matches("^[a-zA-Z]*$") || keyName.startsWith("map_") || keyName.startsWith("digp")) {
                 // Check if the key represents a data attribute and if so, ignore it
                 // This check can NOT be removed, otherwise the next chunk load may trigger an exception
             } else if (key.length >= 8 && key.length <= 14) {
@@ -107,21 +104,15 @@ public class World {
                 }
 
                 Dimension finalDimension = dimension;
-                worldData.getChunkPresets().get(finalDimension).computeIfAbsent(chunkX, x -> new HashMap<>())
-                        .put(chunkZ, new ChunkPreset(worldData, chunkX, chunkZ, finalDimension));
-            }
-
-            entry = null;
-            while (entry == null) {
-                try {
-                    entry = iterator.next();
-                } catch (NoSuchElementException e) {
-                    return;
-                } catch (NumberFormatException e) {
-                    System.out.println("WARNING: Possibly critical failure. LevelDB failed to parse an entry!");
+                if (dimension != null) {
+                    worldData.getChunkPresets().get(finalDimension).computeIfAbsent(chunkX, x -> new HashMap<>())
+                            .put(chunkZ, new ChunkPreset(worldData, chunkX, chunkZ, finalDimension));
+                } else {
+                    System.out.println("WARNING: Null dimension for chunk " + chunkX + "x" + chunkZ);
                 }
             }
         }
+        iterator.close();
     }
 
     /**

@@ -28,6 +28,8 @@ import static nl.itslars.kosmos.util.EntityNBTConstants.*;
 @Getter
 public abstract class Entity {
 
+    // The ID of the entity from the levelDB key
+    private final long worldId;
     // The Compound Tag that represents this entire entity. All methods (!) directly change or retrieve information
     // from this object.
     private CompoundTag parentCompoundTag;
@@ -53,6 +55,26 @@ public abstract class Entity {
             throw new IllegalArgumentException("The position list must have three elements: X, Y and Z.");
         }
         setList(ENTITY_NBT_POS, position, TagType.TAG_FLOAT);
+    }
+
+    public float getX() {
+        return getPosition().get(0);
+    }
+
+    public float getY() {
+        return getPosition().get(1);
+    }
+
+    public float getZ() {
+        return getPosition().get(2);
+    }
+
+    public int getChunkX() {
+        return (int) Math.floor(getPosition().get(0) / 16);
+    }
+
+    public int getChunkZ() {
+        return (int) Math.floor(getPosition().get(2) / 16);
     }
 
     public void setRotation(float yaw, float pitch) {

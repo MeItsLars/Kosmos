@@ -18,8 +18,8 @@ import static nl.itslars.kosmos.util.EntityNBTConstants.*;
  */
 public abstract class LivingEntity extends Entity {
 
-    public LivingEntity(CompoundTag parentCompoundTag) {
-        super(parentCompoundTag);
+    public LivingEntity(long id, CompoundTag parentCompoundTag) {
+        super(id, parentCompoundTag);
     }
 
     // List of ItemStack???

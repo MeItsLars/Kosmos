@@ -1,5 +1,6 @@
 package nl.itslars.kosmos.objects.entity;
 
+import nl.itslars.kosmos.util.Entities;
 import nl.itslars.mcpenbt.enums.TagType;
 import nl.itslars.mcpenbt.tags.*;
 
@@ -17,8 +18,8 @@ import static nl.itslars.kosmos.util.EntityNBTConstants.ENTITY_NBT_IDENTIFIER;
 public class CustomEntity extends Entity {
 
 
-    public CustomEntity(CompoundTag parentCompoundTag) {
-        super(parentCompoundTag);
+    public CustomEntity(long id, CompoundTag parentCompoundTag) {
+        super(id, parentCompoundTag);
     }
 
     /**
@@ -42,7 +43,7 @@ public class CustomEntity extends Entity {
      * @param componentGroups added component groups
      */
     public CustomEntity(String identifier, float x, float y, float z, List<String> componentGroups) {
-        super(getEmpty());
+        super(Entities.RANDOM.nextLong(), getEmpty());
         setIdentifier(identifier);
         ArrayList<String> defs = new ArrayList<>();
         defs.add("+" + identifier);

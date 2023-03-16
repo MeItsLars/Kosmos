@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import nl.itslars.kosmos.World;
 import nl.itslars.kosmos.enums.BlockType;
 import nl.itslars.kosmos.enums.Dimension;
+import nl.itslars.kosmos.objects.entity.Entity;
 import nl.itslars.kosmos.objects.entity.Player;
 import nl.itslars.kosmos.objects.settings.LevelDatFile;
 import nl.itslars.kosmos.util.Chunks;
@@ -15,6 +16,7 @@ import nl.itslars.mcpenbt.tags.CompoundTag;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -37,6 +39,9 @@ public class WorldData implements Closeable {
 
     // Maps Players to their corresponding player_server_X id, or ~localhost if localhost player
     private final Map<Player, byte[]> players = new HashMap<>();
+    // List of all entities in the world
+    @Getter
+    private final List<Entity> entities = new ArrayList<>();
     // Maps player_x pointers to their corresponding player_server_X id
     private final Map<byte[], byte[]> playerPointers = new HashMap<>();
     // List of keys that are scheduled to be removed with the next world save
@@ -77,6 +82,14 @@ public class WorldData implements Closeable {
         players.forEach((key, value) -> {
             byte[] playerData = NBTUtil.write(key.getParentCompoundTag());
             world.getDb().put(value, playerData);
+        });
+        // Saving all entities:
+        entities.forEach(entity -> {
+            byte[] entityData = NBTUtil.write(entity.getParentCompoundTag());
+            ByteBuffer allocate = ByteBuffer.allocate(11 + 8);
+            allocate.put("actorprefix".getBytes());
+            allocate.putLong(entity.getWorldId());
+            world.getDb().put(allocate.array(), entityData);
         });
         // Deleting all scheduled deletion keys:
         for (byte[] key : deletionKeys) {

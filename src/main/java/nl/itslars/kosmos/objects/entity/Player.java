@@ -2,6 +2,7 @@ package nl.itslars.kosmos.objects.entity;
 
 import lombok.Getter;
 import nl.itslars.kosmos.exception.NotYetImplementedException;
+import nl.itslars.kosmos.util.Entities;
 import nl.itslars.mcpenbt.enums.TagType;
 import nl.itslars.mcpenbt.tags.CompoundTag;
 
@@ -13,7 +14,7 @@ import static nl.itslars.kosmos.util.EntityNBTConstants.*;
 /**
  * Class used to represent all loaded players, extends the {@link LivingEntity}.
  * Every player that is saved in the world, is converted to an object that extends this class.
- *
+ * <p>
  * No methods in this class have JavaDocs. I decided this, because it would take me a huge amount
  * of time to document all methods, and it doesn't add that much value. If you want to do this, feel free to do so! :D
  */
@@ -24,7 +25,7 @@ public class Player extends LivingEntity {
     private final byte[] nbtKey;
 
     public Player(CompoundTag parentCompoundTag, byte[] nbtKey) {
-        super(parentCompoundTag);
+        super(Entities.RANDOM.nextLong(), parentCompoundTag);
         this.nbtKey = nbtKey;
     }
 
